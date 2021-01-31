@@ -5,12 +5,6 @@ env:
   DIRENV_FILE: '.envrc'
 
 on:
-  push:
-    tags:
-      - v*
-    branches:
-      - master
-      - main
   pull_request:
     branches-ignore: []
 
