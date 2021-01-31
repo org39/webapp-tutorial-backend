@@ -18,12 +18,13 @@ $(TOOLS_DIR)/mockery: $(TOOLS_MOD_DIR)/go.mod $(TOOLS_MOD_DIR)/go.sum $(TOOLS_MO
 lint: $(TOOLS_DIR)/golangci-lint
 	@echo LINT
 	@$(TOOLS_DIR)/golangci-lint run -c .github/linters/.golangci.yaml --out-format colored-line-number
-	@echo LINT...OK
+	@printf "LINT... \033[0;32m [OK] \033[0m"
 
 .PHONY: test
 test: gen
 	@echo UNITTEST
 	@go test -v ./...
+	@printf "UNITTEST... \033[0;32m [OK] \033[0m"
 
 .PHONY: test-with-coverage
 test-with-coverage:
@@ -52,5 +53,6 @@ gen: $(GEN_TARGETS)
 .PHONY: $(GEN_TARGETS)
 gen/mock: $(TOOLS_DIR)/mockery
 	@echo GENERATE mocks
+	@find ./usecase -type d -name mocks | xargs rm -rf
 	@go generate ./...
 
