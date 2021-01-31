@@ -1,0 +1,53 @@
+name: Unit Test
+
+env:
+  GOVERSION: '1.15'
+  DIRENV_FILE: '.envrc'
+
+on:
+  push:
+    tags:
+      - v*
+    branches:
+      - master
+      - main
+  pull_request:
+    branches-ignore: []
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ env.GOVERSION }}
+
+    - name: Checkout Code
+      uses: actions/checkout@v2
+
+    - name: Check If $DOCKER_COMPOSE_FILE exist
+      run: echo "FOUND_DOCKER_COMPOSE=$(test -f $DOCKER_COMPOSE_FILE && echo FOUND || echo NOT_FOUND)" >> $GITHUB_ENV
+
+    - name: Check If $DIRENV_FILE exist
+      run: echo "FOUND_DIRENV_FILE=$(test -f $DIRENV_FILE && echo FOUND || echo NOT_FOUND)" >> $GITHUB_ENV
+
+    - name: Prepare python3.7 for docker-compose-wait
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+      if: env.FOUND_DOCKER_COMPOSE == 'FOUND'
+
+    - name: Bring Up Test Environment
+      run: |
+        pip3 install docker-compose-wait
+        docker-compose up -d
+        docker-compose-wait -t 60s
+      if: env.FOUND_DOCKER_COMPOSE == 'FOUND'
+
+    - name: Export Environment Variables
+      uses: HatsuneMiku3939/direnv-action@v1
+      if: env.FOUND_DIRENV_FILE == 'FOUND'
+
+    - name: Test
+      run: make test
