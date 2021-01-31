@@ -24,6 +24,10 @@ linters:
     - goimports
     - maligned
     - gocritic
+    - misspell
+    - govet
+    - gofmt
+    - bodyclose
 linters-settings:
   errcheck:
     # report about assignment of errors to blank identifier: `num, _ := strconv.Atoi(numStr)`;
