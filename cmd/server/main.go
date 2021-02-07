@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"net/http"
 	"os"
 	"os/signal"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/org39/webapp-tutorial-backend/app"
 	"github.com/org39/webapp-tutorial-backend/presenter/rest"
 
+	"github.com/labstack/echo/v4"
 	"github.com/org39/webapp-tutorial-backend/pkg/router"
 )
 
@@ -25,6 +27,7 @@ func main() {
 	}
 
 	restAPI, err := rest.NewDispatcher(
+		rest.WithReadinessCheck(readiness(application)),
 		rest.WithUserDispatcher(application.UserUsecase, application.RootLogger),
 	)
 	if err != nil {
@@ -55,5 +58,14 @@ func main() {
 		}
 	case err := <-serverErr:
 		application.RootLogger.WithField("error", err).Fatal("server start error")
+	}
+}
+
+func readiness(application *app.App) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if err := application.DB.Ping(); err != nil {
+			return c.NoContent(http.StatusInternalServerError)
+		}
+		return c.NoContent(http.StatusOK)
 	}
 }

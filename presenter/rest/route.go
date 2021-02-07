@@ -7,7 +7,8 @@ import (
 )
 
 const (
-	healthcheckEndpoint = "/_health"
+	livenessEndpoint  = "/_healthy"
+	readinessEndpoint = "/_healthz"
 )
 
 type Dispatchable interface {
@@ -16,13 +17,16 @@ type Dispatchable interface {
 
 type Dispatcher struct {
 	dispatchers []Dispatchable
-	healthcheck echo.HandlerFunc
+
+	liveness  echo.HandlerFunc
+	readiness echo.HandlerFunc
 }
 
 func NewDispatcher(options ...func(*Dispatcher) error) (*Dispatcher, error) {
 	d := &Dispatcher{
 		dispatchers: []Dispatchable{},
-		healthcheck: nil,
+		liveness:    defaultHealthcheck(),
+		readiness:   defaultHealthcheck(),
 	}
 
 	for _, option := range options {
@@ -34,20 +38,24 @@ func NewDispatcher(options ...func(*Dispatcher) error) (*Dispatcher, error) {
 	return d, nil
 }
 
-func WithHealthcheck(h echo.HandlerFunc) func(*Dispatcher) error {
+func WithLivenessCheck(h echo.HandlerFunc) func(*Dispatcher) error {
 	return func(d *Dispatcher) error {
-		d.healthcheck = h
+		d.liveness = h
+		return nil
+	}
+}
+
+func WithReadinessCheck(h echo.HandlerFunc) func(*Dispatcher) error {
+	return func(d *Dispatcher) error {
+		d.readiness = h
 		return nil
 	}
 }
 
 func (d *Dispatcher) Dispatch(e *echo.Echo) {
 	// mount healthcheck endpoint
-	if d.healthcheck == nil {
-		e.GET(healthcheckEndpoint, defaultHealthcheck())
-	} else {
-		e.GET(healthcheckEndpoint, d.healthcheck)
-	}
+	e.GET(livenessEndpoint, d.liveness)
+	e.GET(readinessEndpoint, d.readiness)
 
 	for _, subr := range d.dispatchers {
 		subr.Dispatch(e)
