@@ -17,6 +17,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer application.DB.Close()
 
 	server, err := router.New(application.RootLogger)
 	if err != nil {
