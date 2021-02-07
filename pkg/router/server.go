@@ -12,7 +12,7 @@ import (
 	"go.opencensus.io/trace"
 )
 
-func New(logger log.Logger) (*echo.Echo, error) {
+func New(logger *log.Logger) (*echo.Echo, error) {
 	e := echo.New()
 
 	accessLogger := log.Wrap(logger.WithField("category", "accessLog"))

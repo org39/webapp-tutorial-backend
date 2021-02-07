@@ -11,15 +11,15 @@ import (
 )
 
 type Service struct {
-	secret               string        `inject:"usecase.auth.secret"`
-	accessTokenDuration  time.Duration `inject:"usecase.auth.access_token_duration"`
-	refreshTokenDuration time.Duration `inject:"usecase.auth.refresh_token_duration"`
+	Secret               string        `inject:"usecase.auth.secret"`
+	AccessTokenDuration  time.Duration `inject:"usecase.auth.access_token_duration"`
+	RefreshTokenDuration time.Duration `inject:"usecase.auth.refresh_token_duration"`
 }
 
 func NewService(options ...func(*Service) error) (Usecase, error) {
 	u := &Service{
-		accessTokenDuration:  6 * time.Hour,
-		refreshTokenDuration: 30 * 24 * time.Hour,
+		AccessTokenDuration:  6 * time.Hour,
+		RefreshTokenDuration: 3 * 24 * time.Hour,
 	}
 
 	for _, option := range options {
@@ -33,7 +33,7 @@ func NewService(options ...func(*Service) error) (Usecase, error) {
 
 func WithSecret(s string) func(*Service) error {
 	return func(u *Service) error {
-		u.secret = s
+		u.Secret = s
 		return nil
 	}
 }
@@ -51,11 +51,11 @@ func (u *Service) GenereateToken(ctx context.Context, req *dto.AuthGenerateReque
 	// The backend can also decode the token and get admin etc.
 	claims := token.Claims.(jwt.MapClaims)
 	claims["email"] = req.Email
-	claims["exp"] = time.Now().Add(u.accessTokenDuration).Unix()
+	claims["exp"] = time.Now().Add(u.AccessTokenDuration).Unix()
 
 	// Generate encoded token and send it as response.
 	// The signing string should be secret.
-	t, err := token.SignedString([]byte(u.secret))
+	t, err := token.SignedString([]byte(u.Secret))
 	if err != nil {
 		return nil, fmt.Errorf("%s: generate token error: %w", err, ErrSystemError)
 	}
@@ -63,9 +63,9 @@ func (u *Service) GenereateToken(ctx context.Context, req *dto.AuthGenerateReque
 	refreshToken := jwt.New(jwt.SigningMethodHS256)
 	rtClaims := refreshToken.Claims.(jwt.MapClaims)
 	rtClaims["email"] = req.Email
-	rtClaims["exp"] = time.Now().Add(u.refreshTokenDuration).Unix()
+	rtClaims["exp"] = time.Now().Add(u.RefreshTokenDuration).Unix()
 
-	rt, err := refreshToken.SignedString([]byte(u.secret))
+	rt, err := refreshToken.SignedString([]byte(u.Secret))
 	if err != nil {
 		return nil, fmt.Errorf("%s: generate referesh token error: %w", err, ErrSystemError)
 	}
@@ -90,7 +90,7 @@ func (u *Service) RefereshToken(ctx context.Context, req *dto.AuthRefereshReques
 		}
 
 		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("secret")
-		return []byte(u.secret), nil
+		return []byte(u.Secret), nil
 	})
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", err, ErrUnauthorized)
@@ -129,7 +129,7 @@ func (u *Service) VerifyToken(ctx context.Context, req *dto.AuthVerifyRequest) e
 			return nil, fmt.Errorf("Unexpected signing method(%v): %w", token.Header["alg"], ErrInvalidRequest)
 		}
 
-		return []byte(u.secret), nil
+		return []byte(u.Secret), nil
 	})
 
 	if err != nil {

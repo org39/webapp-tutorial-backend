@@ -25,10 +25,10 @@ type Logger struct {
 }
 
 // Log global logger
-var Log Logger = Wrap(logrus.WithFields(logrus.Fields{}))
+var Log *Logger = Wrap(logrus.WithFields(logrus.Fields{}))
 
 // LoggerWithSpan spwan new logger with trace span
-func (l Logger) LoggerWithSpan(ctx context.Context) Logger {
+func (l *Logger) LoggerWithSpan(ctx context.Context) *Logger {
 	span := trace.FromContext(ctx)
 	if span == nil {
 		return l
@@ -46,6 +46,6 @@ func (l Logger) LoggerWithSpan(ctx context.Context) Logger {
 }
 
 // Wrap wrap *logrus.Entry to log.Logger
-func Wrap(logrusEntry *logrus.Entry) Logger {
-	return Logger{logrusEntry}
+func Wrap(logrusEntry *logrus.Entry) *Logger {
+	return &Logger{logrusEntry}
 }

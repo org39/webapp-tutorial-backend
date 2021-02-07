@@ -36,6 +36,7 @@ func New(connector driver.Connector, options ...func(*DB) error) (*DB, error) {
 		}
 	}
 
+	db.Connector = connector
 	db.DB = sql.OpenDB(db.Connector)
 
 	// connection pool options
