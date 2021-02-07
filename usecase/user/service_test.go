@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/org39/webapp-tutorial-backend/entity/dto"
+	auth_mocks "github.com/org39/webapp-tutorial-backend/usecase/auth/mocks"
 	"github.com/org39/webapp-tutorial-backend/usecase/user/mocks"
 
 	"github.com/stretchr/testify/assert"
@@ -15,14 +16,19 @@ import (
 
 type UserServiceTestSuite struct {
 	suite.Suite
-	Usecase    Usecase
-	Repository *mocks.Repository
+	Usecase     Usecase
+	AuthUsecase *auth_mocks.Usecase
+	Repository  *mocks.Repository
 }
 
 func (s *UserServiceTestSuite) SetupTest() {
 	s.Repository = new(mocks.Repository)
+	s.AuthUsecase = new(auth_mocks.Usecase)
 
-	usecase, err := NewService(WithRepository(s.Repository))
+	usecase, err := NewService(
+		WithRepository(s.Repository),
+		WithAuthUsecase(s.AuthUsecase),
+	)
 	if err != nil {
 		assert.Fail(s.T(), fmt.Sprintf("fail to create usecase: %s", err))
 	}
@@ -70,15 +76,16 @@ func (s *UserServiceTestSuite) TestSuccessWhenValidRequest() {
 	req := dto.NewFactory().NewUserSignUpRequest("good-guy@mail.com", "STRONG-PASSWORD")
 
 	// mock repo
+	dummyToken := dto.NewFactory().NewAuthTokenPair("access", "referesh")
 	s.Repository.On("FetchByEmail", ctx, req.Email).Return(nil, ErrNotFound)
 	s.Repository.On("Store", ctx, mock.AnythingOfType("*dto.User")).Return(nil)
+	s.AuthUsecase.On("GenereateToken", ctx, mock.AnythingOfType("*dto.AuthGenerateRequest")).Return(dummyToken, nil)
 
 	// assert
 	resp, err := s.Usecase.SignUp(ctx, req)
 	s.Repository.AssertExpectations(s.T())
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), req.Email, resp.Email)
-
 }
 
 func TestUserService(t *testing.T) {

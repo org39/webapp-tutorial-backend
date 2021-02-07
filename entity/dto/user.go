@@ -28,7 +28,9 @@ func (u *UserSignUpRequest) Valid() error {
 }
 
 type UserSignUpResponse struct {
-	ID        string    `json:"id" validate:"required"`
-	Email     string    `json:"email" validate:"required"`
-	CreatedAt time.Time `json:"created_at" validate:"required"`
+	ID            string    `json:"id" validate:"required"`
+	Email         string    `json:"email" validate:"required"`
+	AccessToken   string    `json:"access_token" validate:"required"`
+	RefereshToken string    `json:"referesh_token" validate:"required"`
+	CreatedAt     time.Time `json:"created_at" validate:"required"`
 }

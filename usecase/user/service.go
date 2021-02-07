@@ -8,10 +8,13 @@ import (
 
 	"github.com/org39/webapp-tutorial-backend/entity"
 	"github.com/org39/webapp-tutorial-backend/entity/dto"
+
+	"github.com/org39/webapp-tutorial-backend/usecase/auth"
 )
 
 type Service struct {
-	Repository Repository `inject:""`
+	Repository  Repository   `inject:""`
+	AuthUsecase auth.Usecase `inject:""`
 }
 
 func NewService(options ...func(*Service) error) (Usecase, error) {
@@ -29,6 +32,13 @@ func NewService(options ...func(*Service) error) (Usecase, error) {
 func WithRepository(r Repository) func(*Service) error {
 	return func(u *Service) error {
 		u.Repository = r
+		return nil
+	}
+}
+
+func WithAuthUsecase(a auth.Usecase) func(*Service) error {
+	return func(u *Service) error {
+		u.AuthUsecase = a
 		return nil
 	}
 }
@@ -62,6 +72,22 @@ func (u *Service) SignUp(ctx context.Context, req *dto.UserSignUpRequest) (*dto.
 		return nil, err
 	}
 
-	res := dto.NewFactory().NewUserSignUpResponse(user.ID, user.Email, user.CreatedAt)
+	token, err := u.AuthUsecase.GenereateToken(ctx, dto.NewFactory().NewAuthGenerateRequest(user.Email))
+	if err != nil {
+		return nil, toUserServiceError(err)
+	}
+
+	res := dto.NewFactory().NewUserSignUpResponse(user.ID, user.Email, token.AccessToken, token.RefereshToken, user.CreatedAt)
 	return res, nil
+}
+
+func toUserServiceError(err error) error {
+	switch {
+	case errors.Is(err, auth.ErrInvalidRequest):
+		return fmt.Errorf("%s: invalid signup request: %w", err, auth.ErrInvalidRequest)
+	case errors.Is(err, auth.ErrSystemError):
+		return fmt.Errorf("%s: %w", err, auth.ErrInvalidRequest)
+	}
+
+	return fmt.Errorf("%s: %w", err, auth.ErrInvalidRequest)
 }
