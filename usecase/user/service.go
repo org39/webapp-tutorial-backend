@@ -51,8 +51,13 @@ func (u *Service) SignUp(ctx context.Context, req *dto.UserSignUpRequest) (*dto.
 
 	// test email alread exist
 	_, err := u.Repository.FetchByEmail(ctx, req.Email)
-	if !errors.Is(err, ErrNotFound) {
+	switch {
+	case errors.Is(err, ErrNotFound):
+		// do nothing
+	case err == nil:
 		return nil, fmt.Errorf("email already exist: %w", ErrInvalidSignUpReq)
+	case err != nil:
+		return nil, err
 	}
 
 	// create user object

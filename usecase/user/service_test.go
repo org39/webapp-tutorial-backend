@@ -49,6 +49,19 @@ func (s *UserServiceTestSuite) TestFailWhenEmailAlreadyExist() {
 	assert.ErrorIs(s.T(), err, ErrInvalidSignUpReq)
 }
 
+func (s *UserServiceTestSuite) TestFailWhenDatabaseError() {
+	ctx := context.Background()
+	req := dto.NewFactory().NewUserSignUpRequest("valid@mail.com", "PASSWORD")
+
+	// mock repo
+	s.Repository.On("FetchByEmail", ctx, req.Email).Return(nil, ErrDatabaseError)
+
+	// assert
+	_, err := s.Usecase.SignUp(ctx, req)
+	s.Repository.AssertExpectations(s.T())
+	assert.ErrorIs(s.T(), err, ErrDatabaseError)
+}
+
 func (s *UserServiceTestSuite) TestFailWhenTooShortPassword() {
 	ctx := context.Background()
 	req := dto.NewFactory().NewUserSignUpRequest("existing@mail.com", "123")
