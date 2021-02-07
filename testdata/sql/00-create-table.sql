@@ -1,10 +1,11 @@
-CREATE DATABASE IF NOT EXISTS test;
+CREATE DATABASE IF NOT EXISTS todo_tutorial;
 
-CREATE TABLE test.users (
+CREATE TABLE IF NOT EXISTS todo_tutorial.users (
 	id VARCHAR(36) NOT NULL,
 	email VARCHAR(256) NOT NULL,
 	password VARCHAR(64) NOT NULL,
+	created_at DATETIME NOT NULL,
 	PRIMARY KEY (id)
 );
 
-CREATE UNIQUE INDEX idx_user_email ON test.users(email);
+CREATE UNIQUE INDEX idx_user_email ON todo_tutorial.users(email);
