@@ -1,40 +1,29 @@
 package rest
 
 import (
-	// "context"
 	"errors"
-	// "fmt"
-	// "time"
 	"net/http"
 
 	"github.com/org39/webapp-tutorial-backend/entity/dto"
+	"github.com/org39/webapp-tutorial-backend/usecase/auth"
 	"github.com/org39/webapp-tutorial-backend/usecase/user"
 
 	"github.com/labstack/echo/v4"
 	"github.com/org39/webapp-tutorial-backend/pkg/log"
 )
 
-type userDispatcher struct {
-	UserUsecase user.Usecase
-	Logger      *log.Logger
+type UserDispatcher struct {
+	UserUsecase        user.Usecase `inject:""`
+	AuthUsercase       auth.Usecase `inject:""`
+	SecureRefreshToken bool         `inject:"rest.auth.secure_refresh_token"`
+	Logger             *log.Logger  `inject:""`
 }
 
-func WithUserDispatcher(u user.Usecase, l *log.Logger) func(*Dispatcher) error {
-	return func(r *Dispatcher) error {
-		d := &userDispatcher{
-			UserUsecase: u,
-			Logger:      l,
-		}
-		r.dispatchers = append(r.dispatchers, d)
-		return nil
-	}
-}
-
-func (d *userDispatcher) Dispatch(e *echo.Echo) {
+func (d *UserDispatcher) Dispatch(e *echo.Echo) {
 	e.POST("auth/register", d.Register())
 }
 
-func (d *userDispatcher) Register() echo.HandlerFunc {
+func (d *UserDispatcher) Register() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		req := c.Request()
 		ctx := req.Context()
@@ -45,13 +34,24 @@ func (d *userDispatcher) Register() echo.HandlerFunc {
 			return c.NoContent(http.StatusBadRequest)
 		}
 
-		response, err := d.UserUsecase.SignUp(ctx, payload)
+		response, tokens, err := d.UserUsecase.SignUp(ctx, payload)
 		if err != nil {
 			logger.WithField("error", err).Error("")
 			return toHTTPError(err)
 		}
 
-		return c.JSONPretty(http.StatusCreated, response, "  ")
+		// set refresh token as cookie
+		cookie := new(http.Cookie)
+		cookie.Name = "refresh_token"
+		cookie.Value = tokens.RefreshToken
+		if d.SecureRefreshToken {
+			cookie.Secure = true
+		}
+		c.SetCookie(cookie)
+
+		return c.JSONPretty(http.StatusCreated, map[string]interface{}{
+			"user":         response,
+			"access_token": tokens.AccessToken}, "  ")
 	}
 }
 

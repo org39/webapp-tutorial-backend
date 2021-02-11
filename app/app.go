@@ -4,10 +4,9 @@ import (
 	"github.com/org39/webapp-tutorial-backend/usecase/auth"
 	"github.com/org39/webapp-tutorial-backend/usecase/user"
 
+	"github.com/facebookgo/inject"
 	"github.com/org39/webapp-tutorial-backend/pkg/db"
 	"github.com/org39/webapp-tutorial-backend/pkg/log"
-
-	"github.com/facebookgo/inject"
 )
 
 var DepencencyInjector inject.Graph

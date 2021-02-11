@@ -5,8 +5,8 @@ import (
 )
 
 type AuthTokenPair struct {
-	AccessToken   string `json:"token"`
-	RefereshToken string `json:"referesh_token"`
+	AccessToken  string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 type AuthGenerateRequest struct {
@@ -22,11 +22,11 @@ func (u *AuthGenerateRequest) Valid() error {
 	return nil
 }
 
-type AuthRefereshRequest struct {
-	RefereshToken string `json:"referesh_token" validate:"required"`
+type AuthRefreshRequest struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
 }
 
-func (u *AuthRefereshRequest) Valid() error {
+func (u *AuthRefreshRequest) Valid() error {
 	err := validator.New().Struct(u)
 	if err != nil {
 		return err.(validator.ValidationErrors)

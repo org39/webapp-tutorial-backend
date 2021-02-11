@@ -33,7 +33,7 @@ func (s *AuthServiceTestSuite) TestSuccessGenereateToken() {
 	tokenPair, err := s.Usecase.GenereateToken(ctx, req)
 	assert.NoError(s.T(), err)
 	assert.NotEmpty(s.T(), tokenPair.AccessToken)
-	assert.NotEmpty(s.T(), tokenPair.RefereshToken)
+	assert.NotEmpty(s.T(), tokenPair.RefreshToken)
 }
 
 func (s *AuthServiceTestSuite) TestFailGenereateTokenWithInvalidEmail() {
@@ -46,7 +46,7 @@ func (s *AuthServiceTestSuite) TestFailGenereateTokenWithInvalidEmail() {
 	assert.Nil(s.T(), tokenPair)
 }
 
-func (s *AuthServiceTestSuite) TestSuccessRefereshWithValidToken() {
+func (s *AuthServiceTestSuite) TestSuccessRefreshWithValidToken() {
 	ctx := context.Background()
 	tokenReq := dto.NewFactory().NewAuthGenerateRequest("hatsune@miku.com")
 
@@ -54,13 +54,13 @@ func (s *AuthServiceTestSuite) TestSuccessRefereshWithValidToken() {
 	tokenPair, err := s.Usecase.GenereateToken(ctx, tokenReq)
 	assert.NoError(s.T(), err)
 	assert.NotEmpty(s.T(), tokenPair.AccessToken)
-	assert.NotEmpty(s.T(), tokenPair.RefereshToken)
+	assert.NotEmpty(s.T(), tokenPair.RefreshToken)
 
-	refreshReq := dto.NewFactory().NewAuthRefereshRequest(tokenPair.RefereshToken)
-	newTokenPair, err := s.Usecase.RefereshToken(ctx, refreshReq)
+	refreshReq := dto.NewFactory().NewAuthRefreshRequest(tokenPair.RefreshToken)
+	newTokenPair, err := s.Usecase.RefreshToken(ctx, refreshReq)
 	assert.NoError(s.T(), err)
 	assert.NotEmpty(s.T(), newTokenPair.AccessToken)
-	assert.NotEmpty(s.T(), newTokenPair.RefereshToken)
+	assert.NotEmpty(s.T(), newTokenPair.RefreshToken)
 }
 
 func (s *AuthServiceTestSuite) TestSuccessVerifyWithValidToken() {
@@ -71,7 +71,7 @@ func (s *AuthServiceTestSuite) TestSuccessVerifyWithValidToken() {
 	tokenPair, err := s.Usecase.GenereateToken(ctx, tokenReq)
 	assert.NoError(s.T(), err)
 	assert.NotEmpty(s.T(), tokenPair.AccessToken)
-	assert.NotEmpty(s.T(), tokenPair.RefereshToken)
+	assert.NotEmpty(s.T(), tokenPair.RefreshToken)
 
 	verifyReq := dto.NewFactory().NewAuthVerifyRequest(tokenPair.AccessToken)
 	err = s.Usecase.VerifyToken(ctx, verifyReq)

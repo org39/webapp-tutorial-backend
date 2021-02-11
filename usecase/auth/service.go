@@ -18,8 +18,10 @@ type Service struct {
 
 func NewService(options ...func(*Service) error) (Usecase, error) {
 	u := &Service{
-		AccessTokenDuration:  6 * time.Hour,
-		RefreshTokenDuration: 3 * 24 * time.Hour,
+		// access token duration, 10 minute default
+		AccessTokenDuration: 10 * time.Minute,
+		// refresh token duration, 7 days default
+		RefreshTokenDuration: 7 * 24 * time.Hour,
 	}
 
 	for _, option := range options {
@@ -67,15 +69,15 @@ func (u *Service) GenereateToken(ctx context.Context, req *dto.AuthGenerateReque
 
 	rt, err := refreshToken.SignedString([]byte(u.Secret))
 	if err != nil {
-		return nil, fmt.Errorf("%s: generate referesh token error: %w", err, ErrSystemError)
+		return nil, fmt.Errorf("%s: generate refresh token error: %w", err, ErrSystemError)
 	}
 
 	return dto.NewFactory().NewAuthTokenPair(t, rt), nil
 }
 
-func (u *Service) RefereshToken(ctx context.Context, req *dto.AuthRefereshRequest) (*dto.AuthTokenPair, error) {
+func (u *Service) RefreshToken(ctx context.Context, req *dto.AuthRefreshRequest) (*dto.AuthTokenPair, error) {
 	if err := req.Valid(); err != nil {
-		return nil, fmt.Errorf("%s: invalid referesh request: %w", err, ErrInvalidRequest)
+		return nil, fmt.Errorf("%s: invalid refresh request: %w", err, ErrInvalidRequest)
 	}
 
 	// Parse takes the token string and a function for looking up the key.
@@ -83,7 +85,7 @@ func (u *Service) RefereshToken(ctx context.Context, req *dto.AuthRefereshReques
 	// The standard is to use 'kid' in the head of the token to identify
 	// which key to use, but the parsed token (head and claims) is provided
 	// to the callback, providing flexibility.
-	token, err := jwt.Parse(req.RefereshToken, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(req.RefreshToken, func(token *jwt.Token) (interface{}, error) {
 		// Don't forget to validate the alg is what you expect:
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method(%v): %w", token.Header["alg"], ErrInvalidRequest)

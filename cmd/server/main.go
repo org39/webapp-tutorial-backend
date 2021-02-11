@@ -10,31 +10,24 @@ import (
 	"github.com/org39/webapp-tutorial-backend/app"
 	"github.com/org39/webapp-tutorial-backend/presenter/rest"
 
+	"github.com/facebookgo/inject"
 	"github.com/labstack/echo/v4"
 	"github.com/org39/webapp-tutorial-backend/pkg/router"
 )
 
 func main() {
+	// build application
 	application, err := app.New()
 	if err != nil {
 		panic(err)
 	}
 	defer application.DB.Close()
 
-	server, err := router.New(application.RootLogger)
+	// attach application to RestAPI presenter
+	server, err := newRestAPI(application)
 	if err != nil {
 		panic(err)
 	}
-
-	restAPI, err := rest.NewDispatcher(
-		rest.WithReadinessCheck(readiness(application)),
-		rest.WithUserDispatcher(application.UserUsecase, application.RootLogger),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	restAPI.Dispatch(server)
 
 	// server start and wait signal or error
 	quit := make(chan os.Signal, 5)
@@ -68,4 +61,34 @@ func readiness(application *app.App) echo.HandlerFunc {
 		}
 		return c.NoContent(http.StatusOK)
 	}
+}
+
+func newRestAPI(application *app.App) (*echo.Echo, error) {
+	server, err := router.New(application.RootLogger)
+	if err != nil {
+		return nil, err
+	}
+
+	restAPI, err := rest.NewDispatcher(
+		rest.WithReadinessCheck(readiness(application)),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// user RestAPI
+	userAPI := new(rest.UserDispatcher)
+	restAPI.AttachDispatcher(userAPI)
+	if err := app.DepencencyInjector.Provide(&inject.Object{Value: userAPI}); err != nil {
+		return nil, err
+	}
+
+	// build dependency graph
+	if err := app.DepencencyInjector.Populate(); err != nil {
+		return nil, err
+	}
+
+	restAPI.Dispatch(server)
+
+	return server, nil
 }

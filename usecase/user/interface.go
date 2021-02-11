@@ -17,7 +17,7 @@ var (
 )
 
 type Usecase interface {
-	SignUp(ctx context.Context, req *dto.UserSignUpRequest) (*dto.UserSignUpResponse, error)
+	SignUp(ctx context.Context, req *dto.UserSignUpRequest) (*dto.UserSignUpResponse, *dto.AuthTokenPair, error)
 }
 
 type Repository interface {

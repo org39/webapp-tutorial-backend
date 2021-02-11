@@ -44,7 +44,7 @@ func (s *UserServiceTestSuite) TestFailWhenEmailAlreadyExist() {
 	s.Repository.On("FetchByEmail", ctx, req.Email).Return(nil, nil)
 
 	// assert
-	_, err := s.Usecase.SignUp(ctx, req)
+	_, _, err := s.Usecase.SignUp(ctx, req)
 	s.Repository.AssertExpectations(s.T())
 	assert.ErrorIs(s.T(), err, ErrInvalidSignUpReq)
 }
@@ -57,7 +57,7 @@ func (s *UserServiceTestSuite) TestFailWhenDatabaseError() {
 	s.Repository.On("FetchByEmail", ctx, req.Email).Return(nil, ErrDatabaseError)
 
 	// assert
-	_, err := s.Usecase.SignUp(ctx, req)
+	_, _, err := s.Usecase.SignUp(ctx, req)
 	s.Repository.AssertExpectations(s.T())
 	assert.ErrorIs(s.T(), err, ErrDatabaseError)
 }
@@ -67,7 +67,7 @@ func (s *UserServiceTestSuite) TestFailWhenTooShortPassword() {
 	req := dto.NewFactory().NewUserSignUpRequest("existing@mail.com", "123")
 
 	// assert
-	_, err := s.Usecase.SignUp(ctx, req)
+	_, _, err := s.Usecase.SignUp(ctx, req)
 	s.Repository.AssertExpectations(s.T())
 	assert.ErrorIs(s.T(), err, ErrInvalidSignUpReq)
 	assert.Regexp(s.T(), "Error:Field validation", err)
@@ -78,7 +78,7 @@ func (s *UserServiceTestSuite) TestFailWhenInvalidRequest() {
 	req := dto.NewFactory().NewUserSignUpRequest("invalid-email", "PASSWORD")
 
 	// assert
-	_, err := s.Usecase.SignUp(ctx, req)
+	_, _, err := s.Usecase.SignUp(ctx, req)
 	s.Repository.AssertExpectations(s.T())
 	assert.ErrorIs(s.T(), err, ErrInvalidSignUpReq)
 	assert.Regexp(s.T(), "Error:Field validation", err)
@@ -89,16 +89,18 @@ func (s *UserServiceTestSuite) TestSuccessWhenValidRequest() {
 	req := dto.NewFactory().NewUserSignUpRequest("good-guy@mail.com", "STRONG-PASSWORD")
 
 	// mock repo
-	dummyToken := dto.NewFactory().NewAuthTokenPair("access", "referesh")
+	dummyToken := dto.NewFactory().NewAuthTokenPair("access", "refresh")
 	s.Repository.On("FetchByEmail", ctx, req.Email).Return(nil, ErrNotFound)
 	s.Repository.On("Store", ctx, mock.AnythingOfType("*dto.User")).Return(nil)
 	s.AuthUsecase.On("GenereateToken", ctx, mock.AnythingOfType("*dto.AuthGenerateRequest")).Return(dummyToken, nil)
 
 	// assert
-	resp, err := s.Usecase.SignUp(ctx, req)
+	resp, tokens, err := s.Usecase.SignUp(ctx, req)
 	s.Repository.AssertExpectations(s.T())
 	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), req.Email, resp.Email)
+	assert.NotEmpty(s.T(), tokens.AccessToken)
+	assert.NotEmpty(s.T(), tokens.RefreshToken)
 }
 
 func TestUserService(t *testing.T) {
