@@ -12,6 +12,10 @@ import (
 	"github.com/org39/webapp-tutorial-backend/pkg/log"
 )
 
+const (
+	refreshTokenCookie = "refresh_token"
+)
+
 type UserDispatcher struct {
 	UserUsecase        user.Usecase `inject:""`
 	AuthUsercase       auth.Usecase `inject:""`
@@ -44,7 +48,7 @@ func (d *UserDispatcher) Register() echo.HandlerFunc {
 
 		// set refresh token as cookie
 		cookie := new(http.Cookie)
-		cookie.Name = "refresh_token"
+		cookie.Name = refreshTokenCookie
 		cookie.Value = tokens.RefreshToken
 		if d.SecureRefreshToken {
 			cookie.Secure = true
@@ -76,7 +80,7 @@ func (d *UserDispatcher) Login() echo.HandlerFunc {
 
 		// set refresh token as cookie
 		cookie := new(http.Cookie)
-		cookie.Name = "refresh_token"
+		cookie.Name = refreshTokenCookie
 		cookie.Value = tokens.RefreshToken
 		if d.SecureRefreshToken {
 			cookie.Secure = true
@@ -107,7 +111,7 @@ func (d *UserDispatcher) Refresh() echo.HandlerFunc {
 
 		// set refresh token as cookie
 		cookie := new(http.Cookie)
-		cookie.Name = "refresh_token"
+		cookie.Name = refreshTokenCookie
 		cookie.Value = tokens.RefreshToken
 		if d.SecureRefreshToken {
 			cookie.Secure = true
