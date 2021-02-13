@@ -107,7 +107,6 @@ func (u *Service) RefreshToken(ctx context.Context, req *dto.AuthRefreshRequest)
 		return nil, fmt.Errorf("invalid claims: %w", ErrUnauthorized)
 	}
 
-	fmt.Printf("%+v\n", claims)
 	email, ok := claims["email"].(string)
 	if !ok {
 		return nil, fmt.Errorf("invalid claims: %w", ErrUnauthorized)

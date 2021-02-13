@@ -32,3 +32,17 @@ type UserSignUpResponse struct {
 	Email     string    `json:"email" validate:"required"`
 	CreatedAt time.Time `json:"created_at" validate:"required"`
 }
+
+type UserLoginRequest struct {
+	Email         string `json:"email" validate:"required"`
+	PlainPassword string `json:"password" validate:"required"`
+}
+
+func (u *UserLoginRequest) Valid() error {
+	err := validator.New().Struct(u)
+	if err != nil {
+		return err.(validator.ValidationErrors)
+	}
+
+	return nil
+}

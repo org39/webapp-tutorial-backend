@@ -46,7 +46,7 @@ func WithAuthUsecase(a auth.Usecase) func(*Service) error {
 func (u *Service) SignUp(ctx context.Context, req *dto.UserSignUpRequest) (*dto.UserSignUpResponse, *dto.AuthTokenPair, error) {
 	// test some validation on req
 	if err := req.Valid(); err != nil {
-		return nil, nil, fmt.Errorf("%s: invalid signup request: %w", err, ErrInvalidSignUpReq)
+		return nil, nil, fmt.Errorf("%s: invalid signup request: %w", err, ErrInvalidRequest)
 	}
 
 	// test email alread exist
@@ -55,7 +55,7 @@ func (u *Service) SignUp(ctx context.Context, req *dto.UserSignUpRequest) (*dto.
 	case errors.Is(err, ErrNotFound):
 		// do nothing
 	case err == nil:
-		return nil, nil, fmt.Errorf("email already exist: %w", ErrInvalidSignUpReq)
+		return nil, nil, fmt.Errorf("email already exist: %w", ErrInvalidRequest)
 	case err != nil:
 		return nil, nil, err
 	}
@@ -68,7 +68,7 @@ func (u *Service) SignUp(ctx context.Context, req *dto.UserSignUpRequest) (*dto.
 
 	// validation user object
 	if err := user.Valid(); err != nil {
-		return nil, nil, fmt.Errorf("%s: %w", err.Error(), ErrInvalidSignUpReq)
+		return nil, nil, fmt.Errorf("%s: %w", err.Error(), ErrInvalidRequest)
 	}
 
 	// store user
@@ -86,10 +86,42 @@ func (u *Service) SignUp(ctx context.Context, req *dto.UserSignUpRequest) (*dto.
 	return res, token, nil
 }
 
+func (u *Service) Login(ctx context.Context, req *dto.UserLoginRequest) (*dto.AuthTokenPair, error) {
+	// test some validation on req
+	if err := req.Valid(); err != nil {
+		return nil, fmt.Errorf("%s: invalid login request: %w", err, ErrInvalidRequest)
+	}
+
+	// test email alread exist
+	userDTO, err := u.Repository.FetchByEmail(ctx, req.Email)
+	switch {
+	case errors.Is(err, ErrNotFound):
+		return nil, fmt.Errorf("email not found: %w", ErrNotFound)
+	case err != nil:
+		return nil, err
+	}
+
+	user, err := entity.NewFactory().FromUserDTO(userDTO)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", err, ErrSystemError)
+	}
+
+	if err := user.ValidPassword(req.PlainPassword); err != nil {
+		return nil, fmt.Errorf("%w", ErrUnauthorized)
+	}
+
+	token, err := u.AuthUsecase.GenereateToken(ctx, dto.NewFactory().NewAuthGenerateRequest(user.Email))
+	if err != nil {
+		return nil, toUserServiceError(err)
+	}
+
+	return token, nil
+}
+
 func toUserServiceError(err error) error {
 	switch {
 	case errors.Is(err, auth.ErrInvalidRequest):
-		return fmt.Errorf("%s: invalid signup request: %w", err, auth.ErrInvalidRequest)
+		return fmt.Errorf("%s: invalid request: %w", err, auth.ErrInvalidRequest)
 	case errors.Is(err, auth.ErrSystemError):
 		return fmt.Errorf("%s: %w", err, auth.ErrInvalidRequest)
 	}

@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/org39/webapp-tutorial-backend/entity/dto"
+	"github.com/org39/webapp-tutorial-backend/pkg/crypt"
 	auth_mocks "github.com/org39/webapp-tutorial-backend/usecase/auth/mocks"
 	"github.com/org39/webapp-tutorial-backend/usecase/user/mocks"
 
@@ -36,7 +38,7 @@ func (s *UserServiceTestSuite) SetupTest() {
 	s.Usecase = usecase
 }
 
-func (s *UserServiceTestSuite) TestFailWhenEmailAlreadyExist() {
+func (s *UserServiceTestSuite) TestSignUpFailWhenEmailAlreadyExist() {
 	ctx := context.Background()
 	req := dto.NewFactory().NewUserSignUpRequest("existing@mail.com", "PASSWORD")
 
@@ -46,10 +48,10 @@ func (s *UserServiceTestSuite) TestFailWhenEmailAlreadyExist() {
 	// assert
 	_, _, err := s.Usecase.SignUp(ctx, req)
 	s.Repository.AssertExpectations(s.T())
-	assert.ErrorIs(s.T(), err, ErrInvalidSignUpReq)
+	assert.ErrorIs(s.T(), err, ErrInvalidRequest)
 }
 
-func (s *UserServiceTestSuite) TestFailWhenDatabaseError() {
+func (s *UserServiceTestSuite) TestSignUpFailWhenDatabaseError() {
 	ctx := context.Background()
 	req := dto.NewFactory().NewUserSignUpRequest("valid@mail.com", "PASSWORD")
 
@@ -62,29 +64,29 @@ func (s *UserServiceTestSuite) TestFailWhenDatabaseError() {
 	assert.ErrorIs(s.T(), err, ErrDatabaseError)
 }
 
-func (s *UserServiceTestSuite) TestFailWhenTooShortPassword() {
+func (s *UserServiceTestSuite) TestSignUpFailWhenTooShortPassword() {
 	ctx := context.Background()
 	req := dto.NewFactory().NewUserSignUpRequest("existing@mail.com", "123")
 
 	// assert
 	_, _, err := s.Usecase.SignUp(ctx, req)
 	s.Repository.AssertExpectations(s.T())
-	assert.ErrorIs(s.T(), err, ErrInvalidSignUpReq)
+	assert.ErrorIs(s.T(), err, ErrInvalidRequest)
 	assert.Regexp(s.T(), "Error:Field validation", err)
 }
 
-func (s *UserServiceTestSuite) TestFailWhenInvalidRequest() {
+func (s *UserServiceTestSuite) TestSignUpFailWhenInvalidRequest() {
 	ctx := context.Background()
 	req := dto.NewFactory().NewUserSignUpRequest("invalid-email", "PASSWORD")
 
 	// assert
 	_, _, err := s.Usecase.SignUp(ctx, req)
 	s.Repository.AssertExpectations(s.T())
-	assert.ErrorIs(s.T(), err, ErrInvalidSignUpReq)
+	assert.ErrorIs(s.T(), err, ErrInvalidRequest)
 	assert.Regexp(s.T(), "Error:Field validation", err)
 }
 
-func (s *UserServiceTestSuite) TestSuccessWhenValidRequest() {
+func (s *UserServiceTestSuite) TestSignUpSuccessWhenValidRequest() {
 	ctx := context.Background()
 	req := dto.NewFactory().NewUserSignUpRequest("good-guy@mail.com", "STRONG-PASSWORD")
 
@@ -101,6 +103,53 @@ func (s *UserServiceTestSuite) TestSuccessWhenValidRequest() {
 	assert.Equal(s.T(), req.Email, resp.Email)
 	assert.NotEmpty(s.T(), tokens.AccessToken)
 	assert.NotEmpty(s.T(), tokens.RefreshToken)
+}
+
+func (s *UserServiceTestSuite) TestLoginSuccessWhenCorrectPassword() {
+	ctx := context.Background()
+
+	email := "good-guy@mail.com"
+	plainPassword := "STRONG-PASSWORD"
+	password, err := crypt.Hash([]byte(plainPassword))
+	if err != nil {
+		assert.Fail(s.T(), fmt.Sprintf("fail to hash plainPassword: %s", err))
+	}
+
+	req := dto.NewFactory().NewUserLoginRequest(email, plainPassword)
+	userDTO := dto.NewFactory().NewUser("id", email, password, time.Now())
+
+	dummyToken := dto.NewFactory().NewAuthTokenPair("access", "refresh")
+	s.Repository.On("FetchByEmail", ctx, req.Email).Return(userDTO, nil)
+	s.AuthUsecase.On("GenereateToken", ctx, mock.AnythingOfType("*dto.AuthGenerateRequest")).Return(dummyToken, nil)
+
+	// assert
+	tokens, err := s.Usecase.Login(ctx, req)
+	assert.NoError(s.T(), err)
+	assert.NotEmpty(s.T(), tokens.AccessToken)
+	assert.NotEmpty(s.T(), tokens.RefreshToken)
+}
+
+func (s *UserServiceTestSuite) TestLoginFailWhenWrongPassword() {
+	ctx := context.Background()
+
+	email := "good-guy@mail.com"
+	plainPassword := "STRONG-PASSWORD"
+	password, err := crypt.Hash([]byte(plainPassword))
+	if err != nil {
+		assert.Fail(s.T(), fmt.Sprintf("fail to hash plainPassword: %s", err))
+	}
+
+	req := dto.NewFactory().NewUserLoginRequest(email, "WRONG-PASSWORD")
+	userDTO := dto.NewFactory().NewUser("id", email, password, time.Now())
+
+	dummyToken := dto.NewFactory().NewAuthTokenPair("access", "refresh")
+	s.Repository.On("FetchByEmail", ctx, req.Email).Return(userDTO, nil)
+	s.AuthUsecase.On("GenereateToken", ctx, mock.AnythingOfType("*dto.AuthGenerateRequest")).Return(dummyToken, nil)
+
+	// assert
+	tokens, err := s.Usecase.Login(ctx, req)
+	assert.ErrorIs(s.T(), err, ErrUnauthorized)
+	assert.Nil(s.T(), tokens)
 }
 
 func TestUserService(t *testing.T) {

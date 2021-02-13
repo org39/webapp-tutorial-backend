@@ -10,14 +10,16 @@ import (
 )
 
 var (
-	ErrInvalidSignUpReq = errors.New("invalid signup request")
-	ErrNotFound         = errors.New("not found")
-	ErrSystemError      = errors.New("system error")
-	ErrDatabaseError    = errors.New("database error")
+	ErrInvalidRequest = errors.New("invalid request")
+	ErrNotFound       = errors.New("not found")
+	ErrSystemError    = errors.New("system error")
+	ErrUnauthorized   = errors.New("unauthorized")
+	ErrDatabaseError  = errors.New("database error")
 )
 
 type Usecase interface {
 	SignUp(ctx context.Context, req *dto.UserSignUpRequest) (*dto.UserSignUpResponse, *dto.AuthTokenPair, error)
+	Login(ctx context.Context, req *dto.UserLoginRequest) (*dto.AuthTokenPair, error)
 }
 
 type Repository interface {

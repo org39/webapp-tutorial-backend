@@ -56,3 +56,10 @@ func (f *Factory) NewAuthVerifyRequest(accessToken string) *AuthVerifyRequest {
 		AccessToken: accessToken,
 	}
 }
+
+func (f *Factory) NewUserLoginRequest(email string, plainPassword string) *UserLoginRequest {
+	return &UserLoginRequest{
+		Email:         email,
+		PlainPassword: plainPassword,
+	}
+}

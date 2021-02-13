@@ -20,7 +20,8 @@ type UserDispatcher struct {
 }
 
 func (d *UserDispatcher) Dispatch(e *echo.Echo) {
-	e.POST("auth/register", d.Register())
+	e.POST("user/register", d.Register())
+	e.POST("user/login", d.Login())
 }
 
 func (d *UserDispatcher) Register() echo.HandlerFunc {
@@ -55,10 +56,41 @@ func (d *UserDispatcher) Register() echo.HandlerFunc {
 	}
 }
 
+func (d *UserDispatcher) Login() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		req := c.Request()
+		ctx := req.Context()
+		logger := d.Logger.LoggerWithSpan(ctx)
+
+		payload := dto.NewFactory().NewUserLoginRequest("", "")
+		if err := c.Bind(payload); err != nil {
+			return c.NoContent(http.StatusBadRequest)
+		}
+
+		tokens, err := d.UserUsecase.Login(ctx, payload)
+		if err != nil {
+			logger.WithField("error", err).Error("")
+			return toHTTPError(err)
+		}
+
+		// set refresh token as cookie
+		cookie := new(http.Cookie)
+		cookie.Name = "refresh_token"
+		cookie.Value = tokens.RefreshToken
+		if d.SecureRefreshToken {
+			cookie.Secure = true
+		}
+		c.SetCookie(cookie)
+
+		return c.JSONPretty(http.StatusOK, map[string]interface{}{
+			"access_token": tokens.AccessToken}, "  ")
+	}
+}
+
 func toHTTPError(err error) error {
 	// errors defined in usecase
 	switch {
-	case errors.Is(err, user.ErrInvalidSignUpReq):
+	case errors.Is(err, user.ErrInvalidRequest):
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	case errors.Is(err, user.ErrNotFound):
 		return echo.NewHTTPError(http.StatusNotFound, err.Error())
@@ -66,6 +98,8 @@ func toHTTPError(err error) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	case errors.Is(err, user.ErrDatabaseError):
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	case errors.Is(err, user.ErrUnauthorized):
+		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
 
 	return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
