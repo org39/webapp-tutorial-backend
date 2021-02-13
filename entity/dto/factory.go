@@ -63,3 +63,9 @@ func (f *Factory) NewUserLoginRequest(email string, plainPassword string) *UserL
 		PlainPassword: plainPassword,
 	}
 }
+
+func (f *Factory) NewUserRefreshRequest(refreshToken string) *UserRefreshRequest {
+	return &UserRefreshRequest{
+		RefreshToken: refreshToken,
+	}
+}

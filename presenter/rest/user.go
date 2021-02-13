@@ -22,6 +22,7 @@ type UserDispatcher struct {
 func (d *UserDispatcher) Dispatch(e *echo.Echo) {
 	e.POST("user/register", d.Register())
 	e.POST("user/login", d.Login())
+	e.POST("user/refresh", d.Refresh())
 }
 
 func (d *UserDispatcher) Register() echo.HandlerFunc {
@@ -68,6 +69,37 @@ func (d *UserDispatcher) Login() echo.HandlerFunc {
 		}
 
 		tokens, err := d.UserUsecase.Login(ctx, payload)
+		if err != nil {
+			logger.WithField("error", err).Error("")
+			return toHTTPError(err)
+		}
+
+		// set refresh token as cookie
+		cookie := new(http.Cookie)
+		cookie.Name = "refresh_token"
+		cookie.Value = tokens.RefreshToken
+		if d.SecureRefreshToken {
+			cookie.Secure = true
+		}
+		c.SetCookie(cookie)
+
+		return c.JSONPretty(http.StatusOK, map[string]interface{}{
+			"access_token": tokens.AccessToken}, "  ")
+	}
+}
+
+func (d *UserDispatcher) Refresh() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		req := c.Request()
+		ctx := req.Context()
+		logger := d.Logger.LoggerWithSpan(ctx)
+
+		payload := dto.NewFactory().NewUserRefreshRequest("")
+		if err := c.Bind(payload); err != nil {
+			return c.NoContent(http.StatusBadRequest)
+		}
+
+		tokens, err := d.UserUsecase.Refresh(ctx, payload)
 		if err != nil {
 			logger.WithField("error", err).Error("")
 			return toHTTPError(err)

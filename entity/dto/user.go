@@ -46,3 +46,16 @@ func (u *UserLoginRequest) Valid() error {
 
 	return nil
 }
+
+type UserRefreshRequest struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
+func (u *UserRefreshRequest) Valid() error {
+	err := validator.New().Struct(u)
+	if err != nil {
+		return err.(validator.ValidationErrors)
+	}
+
+	return nil
+}

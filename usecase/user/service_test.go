@@ -152,6 +152,20 @@ func (s *UserServiceTestSuite) TestLoginFailWhenWrongPassword() {
 	assert.Nil(s.T(), tokens)
 }
 
+func (s *UserServiceTestSuite) TestRefreshSuccessWithValidToken() {
+	ctx := context.Background()
+	req := dto.NewFactory().NewUserRefreshRequest("VALID-TOKEN")
+
+	dummyToken := dto.NewFactory().NewAuthTokenPair("access", "refresh")
+	s.AuthUsecase.On("RefreshToken", ctx, mock.AnythingOfType("*dto.AuthRefreshRequest")).Return(dummyToken, nil)
+
+	// assert
+	tokens, err := s.Usecase.Refresh(ctx, req)
+	assert.NoError(s.T(), err)
+	assert.NotEmpty(s.T(), tokens.AccessToken)
+	assert.NotEmpty(s.T(), tokens.RefreshToken)
+}
+
 func TestUserService(t *testing.T) {
 	suite.Run(t, new(UserServiceTestSuite))
 }

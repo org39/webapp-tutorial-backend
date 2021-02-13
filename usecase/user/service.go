@@ -118,13 +118,30 @@ func (u *Service) Login(ctx context.Context, req *dto.UserLoginRequest) (*dto.Au
 	return token, nil
 }
 
-func toUserServiceError(err error) error {
-	switch {
-	case errors.Is(err, auth.ErrInvalidRequest):
-		return fmt.Errorf("%s: invalid request: %w", err, auth.ErrInvalidRequest)
-	case errors.Is(err, auth.ErrSystemError):
-		return fmt.Errorf("%s: %w", err, auth.ErrInvalidRequest)
+func (u *Service) Refresh(ctx context.Context, req *dto.UserRefreshRequest) (*dto.AuthTokenPair, error) {
+	// test some validation on req
+	if err := req.Valid(); err != nil {
+		return nil, fmt.Errorf("%s: invalid refresh request: %w", err, ErrInvalidRequest)
 	}
 
-	return fmt.Errorf("%s: %w", err, auth.ErrInvalidRequest)
+	refreshReq := dto.NewFactory().NewAuthRefreshRequest(req.RefreshToken)
+	token, err := u.AuthUsecase.RefreshToken(ctx, refreshReq)
+	if err != nil {
+		return nil, toUserServiceError(err)
+	}
+
+	return token, nil
+}
+
+func toUserServiceError(err error) error {
+	switch {
+	case errors.Is(err, auth.ErrUnauthorized):
+		return fmt.Errorf("%s: %w", err, ErrUnauthorized)
+	case errors.Is(err, auth.ErrInvalidRequest):
+		return fmt.Errorf("%s: invalid request: %w", err, ErrInvalidRequest)
+	case errors.Is(err, auth.ErrSystemError):
+		return fmt.Errorf("%s: %w", err, ErrSystemError)
+	}
+
+	return fmt.Errorf("%s: %w", err, ErrSystemError)
 }

@@ -78,7 +78,7 @@ func (s *AuthServiceTestSuite) TestSuccessVerifyWithValidToken() {
 	assert.NoError(s.T(), err)
 }
 
-func (s *AuthServiceTestSuite) TestSuccessVerifyWithInvalidToken() {
+func (s *AuthServiceTestSuite) TestFailVerifyWithInvalidToken() {
 	ctx := context.Background()
 	verifyReq := dto.NewFactory().NewAuthVerifyRequest("invalid-token")
 	err := s.Usecase.VerifyToken(ctx, verifyReq)
