@@ -32,9 +32,9 @@ func (f *Factory) NewUserSignUpRequest(email string, plainPassword string) *User
 	}
 }
 
-func (f *Factory) NewAuthGenerateRequest(email string) *AuthGenerateRequest {
+func (f *Factory) NewAuthGenerateRequest(id string) *AuthGenerateRequest {
 	return &AuthGenerateRequest{
-		Email: email,
+		ID: id,
 	}
 }
 

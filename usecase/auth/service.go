@@ -52,7 +52,7 @@ func (u *Service) GenereateToken(ctx context.Context, req *dto.AuthGenerateReque
 	// This is the information which frontend can use
 	// The backend can also decode the token and get admin etc.
 	claims := token.Claims.(jwt.MapClaims)
-	claims["email"] = req.Email
+	claims["id"] = req.ID
 	claims["exp"] = time.Now().Add(u.AccessTokenDuration).Unix()
 
 	// Generate encoded token and send it as response.
@@ -64,7 +64,7 @@ func (u *Service) GenereateToken(ctx context.Context, req *dto.AuthGenerateReque
 
 	refreshToken := jwt.New(jwt.SigningMethodHS256)
 	rtClaims := refreshToken.Claims.(jwt.MapClaims)
-	rtClaims["email"] = req.Email
+	rtClaims["id"] = req.ID
 	rtClaims["exp"] = time.Now().Add(u.RefreshTokenDuration).Unix()
 
 	rt, err := refreshToken.SignedString([]byte(u.Secret))
@@ -107,12 +107,12 @@ func (u *Service) RefreshToken(ctx context.Context, req *dto.AuthRefreshRequest)
 		return nil, fmt.Errorf("invalid claims: %w", ErrUnauthorized)
 	}
 
-	email, ok := claims["email"].(string)
+	id, ok := claims["id"].(string)
 	if !ok {
 		return nil, fmt.Errorf("invalid claims: %w", ErrUnauthorized)
 	}
 
-	newTokenPair, err := u.GenereateToken(ctx, dto.NewFactory().NewAuthGenerateRequest(email))
+	newTokenPair, err := u.GenereateToken(ctx, dto.NewFactory().NewAuthGenerateRequest(id))
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", err, ErrUnauthorized)
 	}
@@ -120,9 +120,9 @@ func (u *Service) RefreshToken(ctx context.Context, req *dto.AuthRefreshRequest)
 	return newTokenPair, nil
 }
 
-func (u *Service) VerifyToken(ctx context.Context, req *dto.AuthVerifyRequest) error {
+func (u *Service) VerifyToken(ctx context.Context, req *dto.AuthVerifyRequest) (string, error) {
 	if err := req.Valid(); err != nil {
-		return fmt.Errorf("%s: invalid verify request: %w", err, ErrInvalidRequest)
+		return "", fmt.Errorf("%s: invalid verify request: %w", err, ErrInvalidRequest)
 	}
 
 	token, err := jwt.Parse(req.AccessToken, func(token *jwt.Token) (interface{}, error) {
@@ -134,12 +134,22 @@ func (u *Service) VerifyToken(ctx context.Context, req *dto.AuthVerifyRequest) e
 	})
 
 	if err != nil {
-		return fmt.Errorf("%s: %w", err, ErrUnauthorized)
+		return "", fmt.Errorf("%s: %w", err, ErrUnauthorized)
 	}
 
 	if !token.Valid {
-		return fmt.Errorf("invalid token: %w", ErrUnauthorized)
+		return "", fmt.Errorf("invalid token: %w", ErrUnauthorized)
 	}
 
-	return nil
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", fmt.Errorf("invalid claims: %w", ErrUnauthorized)
+	}
+
+	id, ok := claims["id"].(string)
+	if !ok {
+		return "", fmt.Errorf("invalid claims: %w", ErrUnauthorized)
+	}
+
+	return id, nil
 }

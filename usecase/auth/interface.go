@@ -18,5 +18,5 @@ var (
 type Usecase interface {
 	GenereateToken(ctx context.Context, req *dto.AuthGenerateRequest) (*dto.AuthTokenPair, error)
 	RefreshToken(ctx context.Context, req *dto.AuthRefreshRequest) (*dto.AuthTokenPair, error)
-	VerifyToken(ctx context.Context, req *dto.AuthVerifyRequest) error
+	VerifyToken(ctx context.Context, req *dto.AuthVerifyRequest) (string, error)
 }

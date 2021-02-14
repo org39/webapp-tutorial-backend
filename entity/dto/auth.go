@@ -10,7 +10,7 @@ type AuthTokenPair struct {
 }
 
 type AuthGenerateRequest struct {
-	Email string `json:"email" validate:"required,email"`
+	ID string `json:"id" validate:"required,uuid4"`
 }
 
 func (u *AuthGenerateRequest) Valid() error {

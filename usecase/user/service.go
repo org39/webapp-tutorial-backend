@@ -77,7 +77,7 @@ func (u *Service) SignUp(ctx context.Context, req *dto.UserSignUpRequest) (*dto.
 		return nil, nil, err
 	}
 
-	token, err := u.AuthUsecase.GenereateToken(ctx, dto.NewFactory().NewAuthGenerateRequest(user.Email))
+	token, err := u.AuthUsecase.GenereateToken(ctx, dto.NewFactory().NewAuthGenerateRequest(user.ID))
 	if err != nil {
 		return nil, nil, toUserServiceError(err)
 	}
@@ -110,7 +110,7 @@ func (u *Service) Login(ctx context.Context, req *dto.UserLoginRequest) (*dto.Au
 		return nil, fmt.Errorf("%w", ErrUnauthorized)
 	}
 
-	token, err := u.AuthUsecase.GenereateToken(ctx, dto.NewFactory().NewAuthGenerateRequest(user.Email))
+	token, err := u.AuthUsecase.GenereateToken(ctx, dto.NewFactory().NewAuthGenerateRequest(user.ID))
 	if err != nil {
 		return nil, toUserServiceError(err)
 	}
