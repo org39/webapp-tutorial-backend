@@ -76,6 +76,12 @@ func newRestAPI(application *app.App) (*echo.Echo, error) {
 		return nil, err
 	}
 
+	// middleware
+	authm := new(rest.AuthMiddleware)
+	if err := app.DepencencyInjector.Provide(&inject.Object{Value: authm}); err != nil {
+		return nil, err
+	}
+
 	// user RestAPI
 	userAPI := new(rest.UserDispatcher)
 	restAPI.AttachDispatcher(userAPI)
@@ -89,6 +95,5 @@ func newRestAPI(application *app.App) (*echo.Echo, error) {
 	}
 
 	restAPI.Dispatch(server)
-
 	return server, nil
 }
