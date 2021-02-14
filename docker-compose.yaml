@@ -15,4 +15,4 @@ services:
       timeout: 60s
       retries: 10
     volumes:
-      - ./testdata/sql:/docker-entrypoint-initdb.d
+      - ./test/testdata/ddl:/docker-entrypoint-initdb.d

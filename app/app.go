@@ -1,6 +1,8 @@
 package app
 
 import (
+	"database/sql/driver"
+
 	"github.com/org39/webapp-tutorial-backend/usecase/auth"
 	"github.com/org39/webapp-tutorial-backend/usecase/user"
 
@@ -22,8 +24,8 @@ type App struct {
 	UserUsecase user.Usecase `inject:""`
 }
 
-func New() (*App, error) {
-	if err := newInfra(); err != nil {
+func New(dbConnectorFn func(*Config) (driver.Connector, error)) (*App, error) {
+	if err := newInfra(dbConnectorFn); err != nil {
 		return nil, err
 	}
 
@@ -49,4 +51,8 @@ func New() (*App, error) {
 	}
 
 	return app, nil
+}
+
+func ClearDepencencyGraph() {
+	DepencencyInjector = inject.Graph{}
 }

@@ -1,12 +1,8 @@
-package main
+package test
 
 import (
-	"context"
 	"database/sql/driver"
 	"net"
-	"net/http"
-	"os"
-	"os/signal"
 	"time"
 
 	"github.com/org39/webapp-tutorial-backend/app"
@@ -16,54 +12,34 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/labstack/echo/v4"
 	"github.com/org39/webapp-tutorial-backend/pkg/router"
+	"github.com/sirupsen/logrus"
+	"github.com/steinfletcher/apitest"
+	apitestdb "github.com/steinfletcher/apitest/x/db"
 )
 
-func main() {
+var recorder *apitest.Recorder
+
+func init() {
+	recorder = apitest.NewTestRecorder()
+}
+
+func buildTestServer() (*app.App, *echo.Echo, error) {
 	// build application
-	application, err := app.New(newMysqlConn)
+	application, err := app.New(newRecorededMysqlConn)
 	if err != nil {
-		panic(err)
+		return nil, nil, err
 	}
-	defer application.DB.Close()
+
+	// disable log
+	application.RootLogger.Logger.SetLevel(logrus.PanicLevel)
 
 	// attach application to RestAPI presenter
 	server, err := newRestAPI(application)
 	if err != nil {
-		panic(err)
+		return nil, nil, err
 	}
 
-	// server start and wait signal or error
-	quit := make(chan os.Signal, 5)
-	signal.Notify(quit, os.Interrupt)
-	serverErr := make(chan error)
-	go func() {
-		serverErr <- server.Start(":8080")
-	}()
-
-	// wait signal or error
-	select {
-	case <-quit:
-		application.RootLogger.Info("receive signal")
-		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-		defer cancel()
-
-		if err := server.Shutdown(ctx); err != nil {
-			application.RootLogger.WithField("error", err).Fatal("server shutdown error")
-		} else {
-			application.RootLogger.Info("stop server")
-		}
-	case err := <-serverErr:
-		application.RootLogger.WithField("error", err).Fatal("server start error")
-	}
-}
-
-func readiness(application *app.App) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		if err := application.DB.Ping(); err != nil {
-			return c.NoContent(http.StatusInternalServerError)
-		}
-		return c.NoContent(http.StatusOK)
-	}
+	return application, server, nil
 }
 
 func newRestAPI(application *app.App) (*echo.Echo, error) {
@@ -72,9 +48,7 @@ func newRestAPI(application *app.App) (*echo.Echo, error) {
 		return nil, err
 	}
 
-	restAPI, err := rest.NewDispatcher(
-		rest.WithReadinessCheck(readiness(application)),
-	)
+	restAPI, err := rest.NewDispatcher()
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +75,7 @@ func newRestAPI(application *app.App) (*echo.Echo, error) {
 	return server, nil
 }
 
-func newMysqlConn(conf *app.Config) (driver.Connector, error) {
+func newRecorededMysqlConn(conf *app.Config) (driver.Connector, error) {
 	utc, err := time.LoadLocation("UTC")
 	if err != nil {
 		return nil, err
@@ -120,5 +94,10 @@ func newMysqlConn(conf *app.Config) (driver.Connector, error) {
 		AllowNativePasswords: true,
 	}
 
-	return mysql.NewConnector(dsn)
+	con, err := mysql.NewConnector(dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	return apitestdb.WrapConnectorWithRecorder(con, "mysql", recorder), nil
 }
