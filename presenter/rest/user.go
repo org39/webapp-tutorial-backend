@@ -98,11 +98,12 @@ func (d *UserDispatcher) Refresh() echo.HandlerFunc {
 		ctx := req.Context()
 		logger := d.Logger.LoggerWithSpan(ctx)
 
-		payload := dto.NewFactory().NewUserRefreshRequest("")
-		if err := c.Bind(payload); err != nil {
-			return c.NoContent(http.StatusBadRequest)
+		cookie, err := c.Cookie(refreshTokenCookie)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 
+		payload := dto.NewFactory().NewUserRefreshRequest(cookie.Value)
 		tokens, err := d.UserUsecase.Refresh(ctx, payload)
 		if err != nil {
 			logger.WithField("error", err).Error("")
@@ -110,13 +111,13 @@ func (d *UserDispatcher) Refresh() echo.HandlerFunc {
 		}
 
 		// set refresh token as cookie
-		cookie := new(http.Cookie)
-		cookie.Name = refreshTokenCookie
-		cookie.Value = tokens.RefreshToken
+		newCookie := new(http.Cookie)
+		newCookie.Name = refreshTokenCookie
+		newCookie.Value = tokens.RefreshToken
 		if d.SecureRefreshToken {
-			cookie.Secure = true
+			newCookie.Secure = true
 		}
-		c.SetCookie(cookie)
+		c.SetCookie(newCookie)
 
 		return c.JSONPretty(http.StatusOK, map[string]interface{}{
 			"access_token": tokens.AccessToken}, "  ")

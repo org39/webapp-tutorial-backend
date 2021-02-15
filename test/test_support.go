@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"net"
 	"net/http"
+	"testing"
 	"time"
 
 	"github.com/org39/webapp-tutorial-backend/app"
@@ -13,7 +14,9 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"github.com/steinfletcher/apitest"
+	jpassert "github.com/steinfletcher/apitest-jsonpath"
 	apitestdb "github.com/steinfletcher/apitest/x/db"
+	"github.com/stretchr/testify/assert"
 )
 
 var recorder *apitest.Recorder
@@ -71,4 +74,50 @@ func newRecorededMysqlConn(conf *app.Config) (driver.Connector, error) {
 	}
 
 	return apitestdb.WrapConnectorWithRecorder(con, "mysql", recorder), nil
+}
+
+func findCookieByName(cookies []*http.Cookie, name string) *http.Cookie {
+	for _, cookie := range cookies {
+		if cookie.Name == name {
+			return cookie
+		}
+	}
+	return nil
+}
+
+type Account struct {
+	Email        string
+	Password     string
+	AccessToken  string `json:"access_token"`
+	RefreshToken string
+}
+
+func createTestAccount(t *testing.T, apiTest *apitest.APITest) Account {
+	account := Account{
+		Email:    "hatsune@miku.com",
+		Password: "very-strong-password",
+	}
+
+	res := apiTest.Post("/user/register").
+		JSON(map[string]string{
+			"email":    account.Email,
+			"password": account.Password,
+		}).
+		Expect(t).
+		CookiePresent("refresh_token").
+		Assert(jpassert.Present("$.access_token")).
+		Status(http.StatusCreated).
+		End()
+
+	// fetch accessToken from response body
+	res.JSON(&account)
+
+	// fetch refreshToken from cookies
+	resp := res.Response
+	loginRespCookies := resp.Cookies()
+	refreshTokenCookie := findCookieByName(loginRespCookies, "refresh_token")
+	assert.NotNil(t, refreshTokenCookie)
+	account.RefreshToken = refreshTokenCookie.Value
+
+	return account
 }

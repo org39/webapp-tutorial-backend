@@ -56,42 +56,27 @@ func (s *UserIntegrationTestSuite) apiTest(name string) *apitest.APITest {
 }
 
 func (s *UserIntegrationTestSuite) TestRegisterSuccess() {
-	email := "hatsune@miku.com"
-	password := "very-strong-password"
-
-	s.apiTest("TestRegisterSuccess").
-		Post("/user/register").
-		JSON(map[string]string{
-			"email":    email,
-			"password": password,
-		}).
-		Expect(s.T()).
-		CookiePresent("refresh_token").
-		Status(http.StatusCreated).
-		End()
+	createTestAccount(s.T(), s.apiTest("TestRegisterSuccess"))
 }
 
 func (s *UserIntegrationTestSuite) TestLoginRefreshSuccess() {
-	email := "hatsune@miku.com"
-	password := "very-strong-password"
-
-	s.apiTest("TestLoginRefreshSuccess").
-		Post("/user/register").
+	account := createTestAccount(s.T(), s.apiTest("TestLoginRefreshSuccess"))
+	loginResp := s.apiTest("TestLoginRefreshSuccess").
+		Post("/user/login").
 		JSON(map[string]string{
-			"email":    email,
-			"password": password,
+			"email":    account.Email,
+			"password": account.Password,
 		}).
 		Expect(s.T()).
 		CookiePresent("refresh_token").
-		Status(http.StatusCreated).
-		End()
+		Assert(jpassert.Present("$.access_token")).
+		Status(http.StatusOK).
+		End().Response
 
+	refreshTokenCookie := findCookieByName(loginResp.Cookies(), "refresh_token")
 	s.apiTest("TestLoginRefreshSuccess").
-		Post("/user/login").
-		JSON(map[string]string{
-			"email":    email,
-			"password": password,
-		}).
+		Post("/user/refresh").
+		Cookie("refresh_token", refreshTokenCookie.Value).
 		Expect(s.T()).
 		CookiePresent("refresh_token").
 		Assert(jpassert.Present("$.access_token")).
