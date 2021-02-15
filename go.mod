@@ -2,7 +2,7 @@ module github.com/org39/webapp-tutorial-backend
 
 go 1.15
 
-replace github.com/steinfletcher/apitest => ../apitest
+replace github.com/steinfletcher/apitest => github.com/HatsuneMiku3939/apitest v1.5.1-0.20210214083623-373f3b5f8cf3
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0

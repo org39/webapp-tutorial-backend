@@ -4,4 +4,4 @@ coverage.html
 .tools
 mocks
 bin
-test/apitest
+test/report
