@@ -25,8 +25,7 @@ type UserIntegrationTestSuite struct {
 }
 
 func (s *UserIntegrationTestSuite) SetupSuite() {
-	s.TestSuiteReporter = testreport.New("UserIntegrationTest", "./report")
-
+	reporter := testreport.New("UserIntegrationTest", "./report")
 	application, server, err := buildTestServer()
 	if err != nil {
 		assert.Fail(s.T(), fmt.Sprintf("fail to create test Server: %s", err))
@@ -34,6 +33,7 @@ func (s *UserIntegrationTestSuite) SetupSuite() {
 
 	s.Application = application
 	s.Server = server
+	s.TestSuiteReporter = reporter
 }
 
 func (s *UserIntegrationTestSuite) SetupTest() {
@@ -41,10 +41,6 @@ func (s *UserIntegrationTestSuite) SetupTest() {
 	if err != nil {
 		assert.Fail(s.T(), fmt.Sprintf("fail to truncate %s table: %s", s.Application.Config.UserTable, err))
 	}
-}
-
-func (s *UserIntegrationTestSuite) TearDownTest() {
-	app.ClearDepencencyGraph()
 }
 
 func (s *UserIntegrationTestSuite) TearDownSuite() {

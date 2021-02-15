@@ -12,10 +12,8 @@ import (
 	"github.com/org39/webapp-tutorial-backend/app"
 	"github.com/org39/webapp-tutorial-backend/presenter/rest"
 
-	"github.com/facebookgo/inject"
 	"github.com/go-sql-driver/mysql"
 	"github.com/labstack/echo/v4"
-	"github.com/org39/webapp-tutorial-backend/pkg/router"
 )
 
 func main() {
@@ -27,7 +25,7 @@ func main() {
 	defer application.DB.Close()
 
 	// attach application to RestAPI presenter
-	server, err := newRestAPI(application)
+	server, err := rest.New(&app.DepencencyInjector, application.RootLogger, readiness(application))
 	if err != nil {
 		panic(err)
 	}
@@ -64,41 +62,6 @@ func readiness(application *app.App) echo.HandlerFunc {
 		}
 		return c.NoContent(http.StatusOK)
 	}
-}
-
-func newRestAPI(application *app.App) (*echo.Echo, error) {
-	server, err := router.New(application.RootLogger)
-	if err != nil {
-		return nil, err
-	}
-
-	restAPI, err := rest.NewDispatcher(
-		rest.WithReadinessCheck(readiness(application)),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	// middleware
-	authm := new(rest.AuthMiddleware)
-	if err := app.DepencencyInjector.Provide(&inject.Object{Value: authm}); err != nil {
-		return nil, err
-	}
-
-	// user RestAPI
-	userAPI := new(rest.UserDispatcher)
-	restAPI.AttachDispatcher(userAPI)
-	if err := app.DepencencyInjector.Provide(&inject.Object{Value: userAPI}); err != nil {
-		return nil, err
-	}
-
-	// build dependency graph
-	if err := app.DepencencyInjector.Populate(); err != nil {
-		return nil, err
-	}
-
-	restAPI.Dispatch(server)
-	return server, nil
 }
 
 func newMysqlConn(conf *app.Config) (driver.Connector, error) {
