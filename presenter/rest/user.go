@@ -42,8 +42,7 @@ func (d *UserDispatcher) Register() echo.HandlerFunc {
 
 		response, tokens, err := d.UserUsecase.SignUp(ctx, payload)
 		if err != nil {
-			logger.WithField("error", err).Error("")
-			return toHTTPError(err)
+			return toHTTPError(logger, err)
 		}
 
 		// set refresh token as cookie
@@ -74,8 +73,7 @@ func (d *UserDispatcher) Login() echo.HandlerFunc {
 
 		tokens, err := d.UserUsecase.Login(ctx, payload)
 		if err != nil {
-			logger.WithField("error", err).Error("")
-			return toHTTPError(err)
+			return toHTTPError(logger, err)
 		}
 
 		// set refresh token as cookie
@@ -100,14 +98,13 @@ func (d *UserDispatcher) Refresh() echo.HandlerFunc {
 
 		cookie, err := c.Cookie(refreshTokenCookie)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return toHTTPError(logger, err)
 		}
 
 		payload := dto.NewFactory().NewUserRefreshRequest(cookie.Value)
 		tokens, err := d.UserUsecase.Refresh(ctx, payload)
 		if err != nil {
-			logger.WithField("error", err).Error("")
-			return toHTTPError(err)
+			return toHTTPError(logger, err)
 		}
 
 		// set refresh token as cookie
@@ -124,20 +121,27 @@ func (d *UserDispatcher) Refresh() echo.HandlerFunc {
 	}
 }
 
-func toHTTPError(err error) error {
+func toHTTPError(logger *log.Logger, err error) error {
 	// errors defined in usecase
 	switch {
 	case errors.Is(err, user.ErrInvalidRequest):
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest)
+
 	case errors.Is(err, user.ErrNotFound):
-		return echo.NewHTTPError(http.StatusNotFound, err.Error())
+		return echo.NewHTTPError(http.StatusNotFound)
+
 	case errors.Is(err, user.ErrSystemError):
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		logger.WithError(err).Error()
+		return echo.NewHTTPError(http.StatusInternalServerError)
+
 	case errors.Is(err, user.ErrDatabaseError):
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		logger.WithError(err).Error()
+		return echo.NewHTTPError(http.StatusInternalServerError)
+
 	case errors.Is(err, user.ErrUnauthorized):
-		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+		return echo.NewHTTPError(http.StatusUnauthorized)
 	}
 
-	return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	logger.WithError(err).Error()
+	return echo.NewHTTPError(http.StatusInternalServerError)
 }
