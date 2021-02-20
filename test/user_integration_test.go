@@ -84,7 +84,7 @@ func (s *UserIntegrationTestSuite) TestLoginRefreshSuccess() {
 		End()
 }
 
-func TestAuthIntegrationTest(t *testing.T) {
+func TestUserIntegrationTest(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")
 	}
