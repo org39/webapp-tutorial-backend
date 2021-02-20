@@ -38,6 +38,10 @@ func NewDispatcher(options ...func(*Dispatcher) error) (*Dispatcher, error) {
 	return d, nil
 }
 
+func (d *Dispatcher) AttachDispatcher(a Dispatchable) {
+	d.dispatchers = append(d.dispatchers, a)
+}
+
 func WithLivenessCheck(h echo.HandlerFunc) func(*Dispatcher) error {
 	return func(d *Dispatcher) error {
 		d.liveness = h

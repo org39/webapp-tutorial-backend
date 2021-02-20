@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"database/sql/driver"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -10,31 +12,23 @@ import (
 	"github.com/org39/webapp-tutorial-backend/app"
 	"github.com/org39/webapp-tutorial-backend/presenter/rest"
 
+	"github.com/go-sql-driver/mysql"
 	"github.com/labstack/echo/v4"
-	"github.com/org39/webapp-tutorial-backend/pkg/router"
 )
 
 func main() {
-	application, err := app.New()
+	// build application
+	application, err := app.New(newMysqlConn)
 	if err != nil {
 		panic(err)
 	}
 	defer application.DB.Close()
 
-	server, err := router.New(application.RootLogger)
+	// attach application to RestAPI presenter
+	server, err := rest.New(&app.DepencencyInjector, application.RootLogger, readiness(application))
 	if err != nil {
 		panic(err)
 	}
-
-	restAPI, err := rest.NewDispatcher(
-		rest.WithReadinessCheck(readiness(application)),
-		rest.WithUserDispatcher(application.UserUsecase, application.RootLogger),
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	restAPI.Dispatch(server)
 
 	// server start and wait signal or error
 	quit := make(chan os.Signal, 5)
@@ -68,4 +62,26 @@ func readiness(application *app.App) echo.HandlerFunc {
 		}
 		return c.NoContent(http.StatusOK)
 	}
+}
+
+func newMysqlConn(conf *app.Config) (driver.Connector, error) {
+	utc, err := time.LoadLocation("UTC")
+	if err != nil {
+		return nil, err
+	}
+
+	databaseHost := net.JoinHostPort(conf.DatabaseHost, conf.DatabasePort)
+	dsn := &mysql.Config{
+		Addr:                 databaseHost,
+		Net:                  "tcp",
+		User:                 conf.DatabaseUser,
+		Passwd:               conf.DatabasePass,
+		Collation:            "utf8mb4_unicode_ci",
+		Loc:                  utc,
+		ParseTime:            true,
+		DBName:               conf.DatabaseName,
+		AllowNativePasswords: true,
+	}
+
+	return mysql.NewConnector(dsn)
 }

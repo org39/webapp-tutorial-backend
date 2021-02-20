@@ -22,13 +22,20 @@ lint: $(TOOLS_DIR)/golangci-lint
 
 .PHONY: test
 test: gen
-	@echo UNITTEST
+	@echo SMALL TEST
+	@go test -v -test.short ./...
+	@printf "SMALL TEST... \033[0;32m [OK] \033[0m"
+
+test-medium: gen
+	@echo MEDIUM TEST
+	@rm -rf test/report
 	@go test -v ./...
-	@printf "UNITTEST... \033[0;32m [OK] \033[0m"
+	@printf "MEDIUM TEST... \033[0;32m [OK] \033[0m"
 
 .PHONY: test-with-coverage
 test-with-coverage:
-	@go test -v ./... -coverprofile=coverage.txt -covermode=atomic
+	@rm -rf test/apitest
+	@go test -v -test.short ./... -coverprofile=coverage.txt -covermode=atomic
 	@go tool cover -html=coverage.txt -o coverage.html
 
 # build

@@ -17,13 +17,11 @@ func (f *Factory) NewUser(id string, email string, password string, createdAt ti
 	}
 }
 
-func (f *Factory) NewUserSignUpResponse(id string, email string, accessToken string, refereshToken string, createdAt time.Time) *UserSignUpResponse {
+func (f *Factory) NewUserSignUpResponse(id string, email string, createdAt time.Time) *UserSignUpResponse {
 	return &UserSignUpResponse{
-		ID:            id,
-		Email:         email,
-		AccessToken:   accessToken,
-		RefereshToken: refereshToken,
-		CreatedAt:     createdAt,
+		ID:        id,
+		Email:     email,
+		CreatedAt: createdAt,
 	}
 }
 
@@ -34,27 +32,40 @@ func (f *Factory) NewUserSignUpRequest(email string, plainPassword string) *User
 	}
 }
 
-func (f *Factory) NewAuthGenerateRequest(email string) *AuthGenerateRequest {
+func (f *Factory) NewAuthGenerateRequest(id string) *AuthGenerateRequest {
 	return &AuthGenerateRequest{
-		Email: email,
+		ID: id,
 	}
 }
 
-func (f *Factory) NewAuthTokenPair(token string, refereshToken string) *AuthTokenPair {
+func (f *Factory) NewAuthTokenPair(token string, refreshToken string) *AuthTokenPair {
 	return &AuthTokenPair{
-		AccessToken:   token,
-		RefereshToken: refereshToken,
+		AccessToken:  token,
+		RefreshToken: refreshToken,
 	}
 }
 
-func (f *Factory) NewAuthRefereshRequest(refereshToken string) *AuthRefereshRequest {
-	return &AuthRefereshRequest{
-		RefereshToken: refereshToken,
+func (f *Factory) NewAuthRefreshRequest(refreshToken string) *AuthRefreshRequest {
+	return &AuthRefreshRequest{
+		RefreshToken: refreshToken,
 	}
 }
 
 func (f *Factory) NewAuthVerifyRequest(accessToken string) *AuthVerifyRequest {
 	return &AuthVerifyRequest{
 		AccessToken: accessToken,
+	}
+}
+
+func (f *Factory) NewUserLoginRequest(email string, plainPassword string) *UserLoginRequest {
+	return &UserLoginRequest{
+		Email:         email,
+		PlainPassword: plainPassword,
+	}
+}
+
+func (f *Factory) NewUserRefreshRequest(refreshToken string) *UserRefreshRequest {
+	return &UserRefreshRequest{
+		RefreshToken: refreshToken,
 	}
 }

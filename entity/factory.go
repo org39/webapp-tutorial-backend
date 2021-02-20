@@ -34,7 +34,7 @@ func (f *Factory) NewUser(email string, plainPassword string, createdAt time.Tim
 	}, nil
 }
 
-func (f *Factory) FromUserDTO(u dto.User) (*User, error) {
+func (f *Factory) FromUserDTO(u *dto.User) (*User, error) {
 	return &User{
 		ID:        u.ID,
 		Email:     u.Email,

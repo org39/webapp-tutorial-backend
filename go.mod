@@ -2,6 +2,8 @@ module github.com/org39/webapp-tutorial-backend
 
 go 1.15
 
+replace github.com/steinfletcher/apitest => github.com/HatsuneMiku3939/apitest v1.5.1-0.20210214083623-373f3b5f8cf3
+
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/HatsuneMiku3939/ocecho v0.3.2
@@ -17,6 +19,8 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/labstack/echo/v4 v4.1.17
 	github.com/sirupsen/logrus v1.7.0
+	github.com/steinfletcher/apitest v1.5.0
+	github.com/steinfletcher/apitest-jsonpath v1.6.0
 	github.com/stretchr/testify v1.7.0
 	go.opencensus.io v0.22.6
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a

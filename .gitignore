@@ -4,3 +4,4 @@ coverage.html
 .tools
 mocks
 bin
+test/report

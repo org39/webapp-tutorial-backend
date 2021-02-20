@@ -20,9 +20,12 @@ type Config struct {
 	UserTable string `required:"true" envconfig:"USER_TABLE"`
 
 	// Auth usecase
-	AuthSecret                string        `required:"true" envconfig:"AUTH_SECRET"`
-	AuthAccessTokenDuration   time.Duration `default:"6h" envconfig:"AUTH_ACCESS_TOKEN_DURATION"`
-	AuthRefereshTokenDuration time.Duration `default:"720h" envconfig:"AUTH_REFERESH_TOKEN_DURATION"`
+	AuthSecret               string        `required:"true" envconfig:"AUTH_SECRET"`
+	AuthAccessTokenDuration  time.Duration `default:"6h" envconfig:"AUTH_ACCESS_TOKEN_DURATION"`
+	AuthRefreshTokenDuration time.Duration `default:"720h" envconfig:"AUTH_REFRESH_TOKEN_DURATION"`
+
+	// Rest Presenter
+	RestAuthSecureRefreshToken bool `required:"true" envconfig:"REST_AUTH_SECURE_REFRESH_TOKEN"`
 }
 
 func NewConfig() (*Config, error) {

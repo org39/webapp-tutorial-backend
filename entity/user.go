@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/org39/webapp-tutorial-backend/pkg/crypt"
 )
 
 type User struct {
@@ -20,4 +21,8 @@ func (u *User) Valid() error {
 	}
 
 	return nil
+}
+
+func (u *User) ValidPassword(plainPassword string) error {
+	return crypt.Compare(u.Password, []byte(plainPassword))
 }

@@ -28,9 +28,34 @@ func (u *UserSignUpRequest) Valid() error {
 }
 
 type UserSignUpResponse struct {
-	ID            string    `json:"id" validate:"required"`
-	Email         string    `json:"email" validate:"required"`
-	AccessToken   string    `json:"access_token" validate:"required"`
-	RefereshToken string    `json:"referesh_token" validate:"required"`
-	CreatedAt     time.Time `json:"created_at" validate:"required"`
+	ID        string    `json:"id" validate:"required"`
+	Email     string    `json:"email" validate:"required"`
+	CreatedAt time.Time `json:"created_at" validate:"required"`
+}
+
+type UserLoginRequest struct {
+	Email         string `json:"email" validate:"required"`
+	PlainPassword string `json:"password" validate:"required"`
+}
+
+func (u *UserLoginRequest) Valid() error {
+	err := validator.New().Struct(u)
+	if err != nil {
+		return err.(validator.ValidationErrors)
+	}
+
+	return nil
+}
+
+type UserRefreshRequest struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
+func (u *UserRefreshRequest) Valid() error {
+	err := validator.New().Struct(u)
+	if err != nil {
+		return err.(validator.ValidationErrors)
+	}
+
+	return nil
 }

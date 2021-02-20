@@ -43,10 +43,10 @@ func WithAuthUsecase(a auth.Usecase) func(*Service) error {
 	}
 }
 
-func (u *Service) SignUp(ctx context.Context, req *dto.UserSignUpRequest) (*dto.UserSignUpResponse, error) {
+func (u *Service) SignUp(ctx context.Context, req *dto.UserSignUpRequest) (*dto.UserSignUpResponse, *dto.AuthTokenPair, error) {
 	// test some validation on req
 	if err := req.Valid(); err != nil {
-		return nil, fmt.Errorf("%s: invalid signup request: %w", err, ErrInvalidSignUpReq)
+		return nil, nil, fmt.Errorf("%s: invalid signup request: %w", err, ErrInvalidRequest)
 	}
 
 	// test email alread exist
@@ -55,44 +55,93 @@ func (u *Service) SignUp(ctx context.Context, req *dto.UserSignUpRequest) (*dto.
 	case errors.Is(err, ErrNotFound):
 		// do nothing
 	case err == nil:
-		return nil, fmt.Errorf("email already exist: %w", ErrInvalidSignUpReq)
+		return nil, nil, fmt.Errorf("email already exist: %w", ErrInvalidRequest)
 	case err != nil:
-		return nil, err
+		return nil, nil, err
 	}
 
 	// create user object
 	user, err := entity.NewFactory().NewUser(req.Email, req.PlainPassword, time.Now())
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", err.Error(), ErrSystemError)
+		return nil, nil, fmt.Errorf("%s: %w", err.Error(), ErrSystemError)
 	}
 
 	// validation user object
 	if err := user.Valid(); err != nil {
-		return nil, fmt.Errorf("%s: %w", err.Error(), ErrInvalidSignUpReq)
+		return nil, nil, fmt.Errorf("%s: %w", err.Error(), ErrInvalidRequest)
 	}
 
 	// store user
 	userDTO := dto.NewFactory().NewUser(user.ID, user.Email, user.Password, user.CreatedAt)
 	if err := u.Repository.Store(ctx, userDTO); err != nil {
+		return nil, nil, err
+	}
+
+	token, err := u.AuthUsecase.GenereateToken(ctx, dto.NewFactory().NewAuthGenerateRequest(user.ID))
+	if err != nil {
+		return nil, nil, toUserServiceError(err)
+	}
+
+	res := dto.NewFactory().NewUserSignUpResponse(user.ID, user.Email, user.CreatedAt)
+	return res, token, nil
+}
+
+func (u *Service) Login(ctx context.Context, req *dto.UserLoginRequest) (*dto.AuthTokenPair, error) {
+	// test some validation on req
+	if err := req.Valid(); err != nil {
+		return nil, fmt.Errorf("%s: invalid login request: %w", err, ErrInvalidRequest)
+	}
+
+	// test email alread exist
+	userDTO, err := u.Repository.FetchByEmail(ctx, req.Email)
+	switch {
+	case errors.Is(err, ErrNotFound):
+		return nil, fmt.Errorf("email not found: %w", ErrNotFound)
+	case err != nil:
 		return nil, err
 	}
 
-	token, err := u.AuthUsecase.GenereateToken(ctx, dto.NewFactory().NewAuthGenerateRequest(user.Email))
+	user, err := entity.NewFactory().FromUserDTO(userDTO)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", err, ErrSystemError)
+	}
+
+	if err := user.ValidPassword(req.PlainPassword); err != nil {
+		return nil, fmt.Errorf("%w", ErrUnauthorized)
+	}
+
+	token, err := u.AuthUsecase.GenereateToken(ctx, dto.NewFactory().NewAuthGenerateRequest(user.ID))
 	if err != nil {
 		return nil, toUserServiceError(err)
 	}
 
-	res := dto.NewFactory().NewUserSignUpResponse(user.ID, user.Email, token.AccessToken, token.RefereshToken, user.CreatedAt)
-	return res, nil
+	return token, nil
+}
+
+func (u *Service) Refresh(ctx context.Context, req *dto.UserRefreshRequest) (*dto.AuthTokenPair, error) {
+	// test some validation on req
+	if err := req.Valid(); err != nil {
+		return nil, fmt.Errorf("%s: invalid refresh request: %w", err, ErrInvalidRequest)
+	}
+
+	refreshReq := dto.NewFactory().NewAuthRefreshRequest(req.RefreshToken)
+	token, err := u.AuthUsecase.RefreshToken(ctx, refreshReq)
+	if err != nil {
+		return nil, toUserServiceError(err)
+	}
+
+	return token, nil
 }
 
 func toUserServiceError(err error) error {
 	switch {
+	case errors.Is(err, auth.ErrUnauthorized):
+		return fmt.Errorf("%s: %w", err, ErrUnauthorized)
 	case errors.Is(err, auth.ErrInvalidRequest):
-		return fmt.Errorf("%s: invalid signup request: %w", err, auth.ErrInvalidRequest)
+		return fmt.Errorf("%s: invalid request: %w", err, ErrInvalidRequest)
 	case errors.Is(err, auth.ErrSystemError):
-		return fmt.Errorf("%s: %w", err, auth.ErrInvalidRequest)
+		return fmt.Errorf("%s: %w", err, ErrSystemError)
 	}
 
-	return fmt.Errorf("%s: %w", err, auth.ErrInvalidRequest)
+	return fmt.Errorf("%s: %w", err, ErrSystemError)
 }
