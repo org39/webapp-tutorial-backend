@@ -15,7 +15,7 @@ func NewFactory() *Factory {
 	return &Factory{}
 }
 
-func (f *Factory) NewUser(email string, plainPassword string, createdAt time.Time) (*User, error) {
+func (f *Factory) NewUser(email string, plainPassword string) (*User, error) {
 	uuid, err := uuid.New()
 	if err != nil {
 		return nil, err
@@ -30,7 +30,7 @@ func (f *Factory) NewUser(email string, plainPassword string, createdAt time.Tim
 		ID:        uuid,
 		Email:     email,
 		Password:  hashedPassword,
-		CreatedAt: createdAt,
+		CreatedAt: time.Now(),
 	}, nil
 }
 
@@ -40,5 +40,34 @@ func (f *Factory) FromUserDTO(u *dto.User) (*User, error) {
 		Email:     u.Email,
 		Password:  u.Password,
 		CreatedAt: u.CreatedAt,
+	}, nil
+}
+
+func (f *Factory) NewTodo(user *User, content string) (*Todo, error) {
+	uuid, err := uuid.New()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Todo{
+		ID:        uuid,
+		UserID:    user.ID,
+		Content:   content,
+		Completed: false,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Deleted:   false,
+	}, nil
+}
+
+func (f *Factory) FromTodoDTO(d *dto.Todo) (*Todo, error) {
+	return &Todo{
+		ID:        d.ID,
+		UserID:    d.UserID,
+		Content:   d.Content,
+		Completed: d.Completed,
+		CreatedAt: d.CreatedAt,
+		UpdatedAt: d.UpdatedAt,
+		Deleted:   d.Deleted,
 	}, nil
 }

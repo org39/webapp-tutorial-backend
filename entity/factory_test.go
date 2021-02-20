@@ -2,7 +2,6 @@ package entity
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -19,15 +18,14 @@ func (s *EntityFactoryTestSuite) SetupTest() {
 
 func (s *EntityFactoryTestSuite) TestCreateValidUser() {
 	cases := []struct {
-		email     string
-		password  string
-		createdAt time.Time
+		email    string
+		password string
 	}{
-		{email: "hatsune@miku.com", password: "PASSWORD", createdAt: time.Now()},
+		{email: "hatsune@miku.com", password: "PASSWORD"},
 	}
 
 	for _, c := range cases {
-		good, err := s.Factory.NewUser(c.email, c.password, c.createdAt)
+		good, err := s.Factory.NewUser(c.email, c.password)
 		assert.NoError(s.T(), err)
 
 		v := good.Valid()

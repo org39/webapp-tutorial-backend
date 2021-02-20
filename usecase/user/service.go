@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/org39/webapp-tutorial-backend/entity"
 	"github.com/org39/webapp-tutorial-backend/entity/dto"
@@ -61,7 +60,7 @@ func (u *Service) SignUp(ctx context.Context, req *dto.UserSignUpRequest) (*dto.
 	}
 
 	// create user object
-	user, err := entity.NewFactory().NewUser(req.Email, req.PlainPassword, time.Now())
+	user, err := entity.NewFactory().NewUser(req.Email, req.PlainPassword)
 	if err != nil {
 		return nil, nil, fmt.Errorf("%s: %w", err.Error(), ErrSystemError)
 	}
