@@ -6,11 +6,21 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+// TODO, add validate tag
 type User struct {
-	ID        string
-	Email     string
+	ID        string `json:"id"`
+	Email     string `json:"email"`
 	Password  string
-	CreatedAt time.Time
+	CreatedAt time.Time `json:"created_at"`
+}
+
+func (u *User) Valid() error {
+	err := validator.New().Struct(u)
+	if err != nil {
+		return err.(validator.ValidationErrors)
+	}
+
+	return nil
 }
 
 type UserSignUpRequest struct {

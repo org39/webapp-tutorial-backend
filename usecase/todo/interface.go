@@ -1,11 +1,12 @@
-package user
+package todo
 
 //go:generate mockery --all
 
 import (
-	// "context"
+	"context"
 	"errors"
-	// "github.com/org39/webapp-tutorial-backend/entity/dto"
+
+	"github.com/org39/webapp-tutorial-backend/entity/dto"
 )
 
 var (
@@ -17,7 +18,17 @@ var (
 )
 
 type Usecase interface {
+	Create(ctx context.Context, u *dto.User, content string) (*dto.Todo, error)
+	FetchAllByUser(ctx context.Context, u *dto.User) ([]*dto.Todo, error)
+	FetchByID(ctx context.Context, u *dto.User, id string) (*dto.Todo, error)
+	Update(ctx context.Context, u *dto.User, t *dto.Todo) (*dto.Todo, error)
+	Delete(ctx context.Context, u *dto.User, t *dto.Todo) error
 }
 
 type Repository interface {
+	Store(ctx context.Context, t *dto.Todo) error
+	Update(ctx context.Context, t *dto.Todo) error
+	Delete(ctx context.Context, t *dto.Todo) error
+	FetchAllByUser(ctx context.Context, u *dto.User) ([]*dto.Todo, error)
+	FetchByID(ctx context.Context, id string) (*dto.Todo, error)
 }

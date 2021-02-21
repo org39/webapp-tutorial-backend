@@ -48,14 +48,15 @@ func (f *Factory) NewTodo(user *User, content string) (*Todo, error) {
 	if err != nil {
 		return nil, err
 	}
+	now := time.Now()
 
 	return &Todo{
 		ID:        uuid,
 		UserID:    user.ID,
 		Content:   content,
 		Completed: false,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt: now,
+		UpdatedAt: now,
 		Deleted:   false,
 	}, nil
 }

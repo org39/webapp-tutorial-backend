@@ -32,8 +32,8 @@ func (s *UserRepoTestSuite) SetupTest() {
 	s.Sqlmock = mock
 
 	r, err := NewUserRepository(
-		WithTable("users"),
-		WithDB(s.DB),
+		WithUserTable("users"),
+		WithUserDB(s.DB),
 	)
 	if err != nil {
 		assert.Fail(s.T(), fmt.Sprintf("fail to create repository: %s", err))
@@ -55,7 +55,9 @@ func (s *UserRepoTestSuite) TestFetchByEmailExist() {
 	s.Sqlmock.ExpectQuery(q).
 		WithArgs(email).
 		WillReturnRows(
-			sqlmock.NewRows([]string{"id", "email", "password", "created_at"}).AddRow("id", email, "PASSWORD", time.Now()),
+			sqlmock.
+				NewRows([]string{"id", "email", "password", "created_at"}).
+				AddRow("id", email, "PASSWORD", time.Now()),
 		)
 
 	// assert
