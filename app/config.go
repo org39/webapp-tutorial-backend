@@ -24,6 +24,9 @@ type Config struct {
 	AuthAccessTokenDuration  time.Duration `default:"6h" envconfig:"AUTH_ACCESS_TOKEN_DURATION"`
 	AuthRefreshTokenDuration time.Duration `default:"720h" envconfig:"AUTH_REFRESH_TOKEN_DURATION"`
 
+	// Todo usecase
+	TodoTable string `required:"true" envconfig:"TODO_TABLE"`
+
 	// Rest Presenter
 	RestAuthSecureRefreshToken bool `required:"true" envconfig:"REST_AUTH_SECURE_REFRESH_TOKEN"`
 }

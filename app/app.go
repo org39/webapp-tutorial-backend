@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 
 	"github.com/org39/webapp-tutorial-backend/usecase/auth"
+	"github.com/org39/webapp-tutorial-backend/usecase/todo"
 	"github.com/org39/webapp-tutorial-backend/usecase/user"
 
 	"github.com/facebookgo/inject"
@@ -22,6 +23,7 @@ type App struct {
 	// application usecase
 	AuthUsecase auth.Usecase `inject:""`
 	UserUsecase user.Usecase `inject:""`
+	TodoUsecase todo.Usecase `inject:""`
 }
 
 func New(dbConnectorFn func(*Config) (driver.Connector, error)) (*App, error) {
@@ -34,6 +36,10 @@ func New(dbConnectorFn func(*Config) (driver.Connector, error)) (*App, error) {
 	}
 
 	if err := newAuthUsecase(); err != nil {
+		return nil, err
+	}
+
+	if err := newTodoUsecase(); err != nil {
 		return nil, err
 	}
 

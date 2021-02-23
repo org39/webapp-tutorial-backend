@@ -81,3 +81,17 @@ func (f *Factory) NewTodo(id string, userID string, content string, completed bo
 		Deleted:   deleted,
 	}
 }
+
+func (f *Factory) NewTodoCreatRequest(content string) *TodoCreatRequest {
+	return &TodoCreatRequest{
+		Content: content,
+	}
+}
+
+func (f *Factory) NewTodoUpdateRequest(content string, completed bool, deleted bool) *TodoUpdateRequest {
+	return &TodoUpdateRequest{
+		Content:   content,
+		Completed: completed,
+		Deleted:   deleted,
+	}
+}

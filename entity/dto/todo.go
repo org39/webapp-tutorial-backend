@@ -9,7 +9,7 @@ import (
 // TODO, add validate tag
 type Todo struct {
 	ID        string    `json:"id"`
-	UserID    string    `json:"user_id"`
+	UserID    string    `json:"-"`
 	Content   string    `json:"content"`
 	Completed bool      `json:"completed"`
 	CreatedAt time.Time `json:"created_at"`
@@ -24,4 +24,14 @@ func (u *Todo) Valid() error {
 	}
 
 	return nil
+}
+
+type TodoCreatRequest struct {
+	Content string `json:"content" validate:"required"`
+}
+
+type TodoUpdateRequest struct {
+	Content   string `json:"content" validate:"required"`
+	Completed bool   `json:"completed"`
+	Deleted   bool   `json:"deleted"`
 }

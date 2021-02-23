@@ -2,6 +2,7 @@ package test
 
 import (
 	"database/sql/driver"
+	"fmt"
 	"net"
 	"net/http"
 	"testing"
@@ -85,8 +86,12 @@ func findCookieByName(cookies []*http.Cookie, name string) *http.Cookie {
 	return nil
 }
 
+type User struct {
+	ID    string `json:"id"`
+	Email string `json:"email"`
+}
 type Account struct {
-	Email        string
+	User         User `json:"user"`
 	Password     string
 	AccessToken  string `json:"access_token"`
 	RefreshToken string
@@ -94,13 +99,15 @@ type Account struct {
 
 func createTestAccount(t *testing.T, apiTest *apitest.APITest) Account {
 	account := Account{
-		Email:    "hatsune@miku.com",
+		User: User{
+			Email: "hatsune@miku.com",
+		},
 		Password: "very-strong-password",
 	}
 
 	res := apiTest.Post("/user/register").
 		JSON(map[string]string{
-			"email":    account.Email,
+			"email":    account.User.Email,
 			"password": account.Password,
 		}).
 		Expect(t).
@@ -120,4 +127,31 @@ func createTestAccount(t *testing.T, apiTest *apitest.APITest) Account {
 	account.RefreshToken = refreshTokenCookie.Value
 
 	return account
+}
+
+type Todo struct {
+	ID        string `json:"id"`
+	Content   string `json:"content"`
+	Completed bool   `json:"completed"`
+	Deleted   bool   `json:"deleted"`
+}
+
+func createTestTodo(t *testing.T, apiTest *apitest.APITest, account Account, content string) Todo {
+	res := apiTest.Post("/todos").
+		JSON(map[string]string{
+			"content": content,
+		}).
+		Header("Authorization", fmt.Sprintf("Bearer %s", account.AccessToken)).
+		Expect(t).
+		Assert(jpassert.Equal("$.content", content)).
+		Assert(jpassert.Equal("$.completed", false)).
+		Assert(jpassert.Equal("$.deleted", false)).
+		Status(http.StatusCreated).
+		End()
+
+	// fetch newly created todo from response body
+	todo := Todo{}
+	res.JSON(&todo)
+
+	return todo
 }

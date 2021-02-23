@@ -82,27 +82,37 @@ func (s *Service) FetchByID(ctx context.Context, u *dto.User, id string) (*dto.T
 	return todo, nil
 }
 
-func (s *Service) Update(ctx context.Context, u *dto.User, t *dto.Todo) (*dto.Todo, error) {
-	// test some validation on req
-	if err := t.Valid(); err != nil {
-		return nil, fmt.Errorf("%s: invalid request: %w", err, ErrInvalidRequest)
-	}
-
-	if u.ID != t.UserID {
-		return nil, ErrUnauthorized
-	}
-
-	if err := s.Repository.Update(ctx, t); err != nil {
+func (s *Service) Update(ctx context.Context, u *dto.User, id string, t *dto.TodoUpdateRequest) (*dto.Todo, error) {
+	// fetch todo
+	ori, err := s.Repository.FetchByID(ctx, id)
+	if err != nil {
 		return nil, err
 	}
 
-	return t, nil
+	if u.ID != ori.UserID {
+		return nil, ErrUnauthorized
+	}
+
+	// create new Todo
+	newTodo := dto.NewFactory().NewTodo(ori.ID, ori.UserID, t.Content, t.Completed, ori.CreatedAt, ori.UpdatedAt, t.Deleted)
+
+	// test some validation on new Todo
+	if err := newTodo.Valid(); err != nil {
+		return nil, fmt.Errorf("%s: invalid request: %w", err, ErrInvalidRequest)
+	}
+
+	// Update
+	if err := s.Repository.Update(ctx, newTodo); err != nil {
+		return nil, err
+	}
+
+	return newTodo, nil
 }
 
-func (s *Service) Delete(ctx context.Context, u *dto.User, t *dto.Todo) error {
-	// test some validation on req
-	if err := t.Valid(); err != nil {
-		return fmt.Errorf("%s: invalid request: %w", err, ErrInvalidRequest)
+func (s *Service) Delete(ctx context.Context, u *dto.User, id string) error {
+	t, err := s.Repository.FetchByID(ctx, id)
+	if err != nil {
+		return err
 	}
 
 	if u.ID != t.UserID {

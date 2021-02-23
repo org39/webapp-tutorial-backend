@@ -18,6 +18,7 @@ var (
 )
 
 type Usecase interface {
+	FetchByID(ctx context.Context, id string) (*dto.User, error)
 	SignUp(ctx context.Context, req *dto.UserSignUpRequest) (*dto.UserSignUpResponse, *dto.AuthTokenPair, error)
 	Login(ctx context.Context, req *dto.UserLoginRequest) (*dto.AuthTokenPair, error)
 	Refresh(ctx context.Context, req *dto.UserRefreshRequest) (*dto.AuthTokenPair, error)

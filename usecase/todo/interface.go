@@ -21,8 +21,8 @@ type Usecase interface {
 	Create(ctx context.Context, u *dto.User, content string) (*dto.Todo, error)
 	FetchAllByUser(ctx context.Context, u *dto.User) ([]*dto.Todo, error)
 	FetchByID(ctx context.Context, u *dto.User, id string) (*dto.Todo, error)
-	Update(ctx context.Context, u *dto.User, t *dto.Todo) (*dto.Todo, error)
-	Delete(ctx context.Context, u *dto.User, t *dto.Todo) error
+	Update(ctx context.Context, u *dto.User, id string, t *dto.TodoUpdateRequest) (*dto.Todo, error)
+	Delete(ctx context.Context, u *dto.User, id string) error
 }
 
 type Repository interface {

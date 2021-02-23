@@ -101,13 +101,16 @@ func (s *TodoServiceTestSuite) TestUpdateSuccess() {
 
 	id := "4daaaea8-4721-4644-aaac-7958805b4530"
 	todoDTO := dto.NewFactory().NewTodo(id, userID, "things todo", false, time.Now(), time.Now(), false)
+	todoUpdate := dto.NewFactory().NewTodoUpdateRequest("things todo", true, false)
+	newTodo := dto.NewFactory().NewTodo(todoDTO.ID, todoDTO.UserID, todoUpdate.Content, todoUpdate.Completed, todoDTO.CreatedAt, todoDTO.UpdatedAt, todoUpdate.Deleted)
 
-	s.Repository.On("Update", ctx, todoDTO).Return(nil)
+	s.Repository.On("FetchByID", ctx, id).Return(todoDTO, nil)
+	s.Repository.On("Update", ctx, newTodo).Return(nil)
 
 	// assert
-	res, err := s.Usecase.Update(ctx, userDTO, todoDTO)
+	res, err := s.Usecase.Update(ctx, userDTO, id, todoUpdate)
 	assert.NoError(s.T(), err)
-	assert.Equal(s.T(), todoDTO.UserID, res.UserID)
+	assert.Equal(s.T(), newTodo, res)
 }
 
 func (s *TodoServiceTestSuite) TestDeleteSuccess() {
@@ -120,10 +123,11 @@ func (s *TodoServiceTestSuite) TestDeleteSuccess() {
 	id := "4daaaea8-4721-4644-aaac-7958805b4530"
 	todoDTO := dto.NewFactory().NewTodo(id, userID, "things todo", false, time.Now(), time.Now(), false)
 
+	s.Repository.On("FetchByID", ctx, id).Return(todoDTO, nil)
 	s.Repository.On("Update", ctx, todoDTO).Return(nil)
 
 	// assert
-	err := s.Usecase.Delete(ctx, userDTO, todoDTO)
+	err := s.Usecase.Delete(ctx, userDTO, id)
 	assert.NoError(s.T(), err)
 }
 

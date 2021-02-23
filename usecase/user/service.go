@@ -132,6 +132,10 @@ func (u *Service) Refresh(ctx context.Context, req *dto.UserRefreshRequest) (*dt
 	return token, nil
 }
 
+func (u *Service) FetchByID(ctx context.Context, id string) (*dto.User, error) {
+	return u.Repository.FetchByID(ctx, id)
+}
+
 func toUserServiceError(err error) error {
 	switch {
 	case errors.Is(err, auth.ErrUnauthorized):
