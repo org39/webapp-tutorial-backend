@@ -23,19 +23,19 @@ lint: $(TOOLS_DIR)/golangci-lint
 .PHONY: test
 test: gen
 	@echo SMALL TEST
-	@go test -v -test.short ./...
+	@go test -test.short ./...
 	@printf "SMALL TEST... \033[0;32m [OK] \033[0m"
 
 test-medium: gen
 	@echo MEDIUM TEST
 	@rm -rf test/report
-	@go test -v ./...
+	@go test ./...
 	@printf "MEDIUM TEST... \033[0;32m [OK] \033[0m"
 
 .PHONY: test-with-coverage
 test-with-coverage:
 	@rm -rf test/apitest
-	@go test -v -test.short ./... -coverprofile=coverage.txt -covermode=atomic
+	@go test -test.short ./... -coverprofile=coverage.txt -covermode=atomic
 	@go tool cover -html=coverage.txt -o coverage.html
 
 # build
@@ -50,7 +50,7 @@ $(BIN_DIR):
 .PHONY: $(BUILD_TARGETS)
 build/server: $(BIN_DIR)
 	@echo BUILD server
-	@go build -v -o ./bin/server ./cmd/server
+	@go build -o ./bin/server ./cmd/server
 
 # gen
 GEN_TARGETS=gen/mock
