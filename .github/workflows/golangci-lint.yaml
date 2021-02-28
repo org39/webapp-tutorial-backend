@@ -12,12 +12,20 @@ jobs:
     name: lint
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout Code
+      uses: actions/checkout@v2
 
     - name: Install Go
       uses: actions/setup-go@v2
       with:
         go-version: ${{ env.GOVERSION }}
+
+    - uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
 
     - name: Check If $DIRENV_FILE exist
       run: echo "FOUND_DIRENV_FILE=$(test -f $DIRENV_FILE && echo FOUND || echo NOT_FOUND)" >> $GITHUB_ENV
