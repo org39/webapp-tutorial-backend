@@ -64,7 +64,7 @@ func (s *UserIntegrationTestSuite) TestLoginRefreshSuccess() {
 	loginResp := s.apiTest("TestLoginRefreshSuccess").
 		Post("/user/login").
 		JSON(map[string]string{
-			"email":    account.Email,
+			"email":    account.User.Email,
 			"password": account.Password,
 		}).
 		Expect(s.T()).

@@ -35,14 +35,14 @@ func NewUserRepository(options ...func(*UserRepository) error) (user.Repository,
 	return r, nil
 }
 
-func WithDB(db *db.DB) func(*UserRepository) error {
+func WithUserDB(db *db.DB) func(*UserRepository) error {
 	return func(r *UserRepository) error {
 		r.DB = db
 		return nil
 	}
 }
 
-func WithTable(table string) func(*UserRepository) error {
+func WithUserTable(table string) func(*UserRepository) error {
 	return func(r *UserRepository) error {
 		r.Table = table
 		return nil
@@ -55,7 +55,7 @@ func (r *UserRepository) FetchByID(ctx context.Context, id string) (*dto.User, e
 		return nil, fmt.Errorf("%s: %w", err.Error(), user.ErrDatabaseError)
 	}
 
-	row := r.DB.QueryRow(ctx, query, args)
+	row := r.DB.QueryRow(ctx, query, args...)
 	user, err := r.scanUser(row)
 	if err != nil {
 		return nil, err
@@ -80,7 +80,10 @@ func (r *UserRepository) FetchByEmail(ctx context.Context, email string) (*dto.U
 }
 
 func (r *UserRepository) Store(ctx context.Context, u *dto.User) error {
-	query, args, err := sq.Insert(r.Table).Columns(userCols...).Values(u.ID, u.Email, u.Password, u.CreatedAt).ToSql()
+	query, args, err := sq.Insert(r.Table).
+		Columns(userCols...).
+		Values(u.ID, u.Email, u.Password, u.CreatedAt).
+		ToSql()
 	if err != nil {
 		return fmt.Errorf("%s: %w", err.Error(), user.ErrDatabaseError)
 	}
@@ -93,7 +96,11 @@ func (r *UserRepository) Store(ctx context.Context, u *dto.User) error {
 }
 
 func (r *UserRepository) Update(ctx context.Context, u *dto.User) error {
-	query, args, err := sq.Update(r.Table).Set("email", u.Email).Set("password", u.Password).Where(sq.Eq{"id": u.ID}).ToSql()
+	query, args, err := sq.Update(r.Table).
+		Set("email", u.Email).
+		Set("password", u.Password).
+		Where(sq.Eq{"id": u.ID}).
+		ToSql()
 	if err != nil {
 		return fmt.Errorf("%s: %w", err.Error(), user.ErrDatabaseError)
 	}

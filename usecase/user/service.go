@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/org39/webapp-tutorial-backend/entity"
 	"github.com/org39/webapp-tutorial-backend/entity/dto"
@@ -61,7 +60,7 @@ func (u *Service) SignUp(ctx context.Context, req *dto.UserSignUpRequest) (*dto.
 	}
 
 	// create user object
-	user, err := entity.NewFactory().NewUser(req.Email, req.PlainPassword, time.Now())
+	user, err := entity.NewFactory().NewUser(req.Email, req.PlainPassword)
 	if err != nil {
 		return nil, nil, fmt.Errorf("%s: %w", err.Error(), ErrSystemError)
 	}
@@ -131,6 +130,10 @@ func (u *Service) Refresh(ctx context.Context, req *dto.UserRefreshRequest) (*dt
 	}
 
 	return token, nil
+}
+
+func (u *Service) FetchByID(ctx context.Context, id string) (*dto.User, error) {
+	return u.Repository.FetchByID(ctx, id)
 }
 
 func toUserServiceError(err error) error {

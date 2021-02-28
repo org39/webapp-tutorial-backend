@@ -33,6 +33,13 @@ func New(g *inject.Graph, logger *log.Logger, readiness echo.HandlerFunc) (*echo
 		return nil, err
 	}
 
+	// todo RestAPI
+	todoAPI := new(TodoDispatcher)
+	restAPI.AttachDispatcher(todoAPI)
+	if err := g.Provide(&inject.Object{Value: todoAPI}); err != nil {
+		return nil, err
+	}
+
 	// build dependency graph
 	if err := g.Populate(); err != nil {
 		return nil, err
