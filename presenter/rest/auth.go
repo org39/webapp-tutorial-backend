@@ -52,13 +52,13 @@ func (a *AuthMiddleware) Middleware() echo.MiddlewareFunc {
 			id, err := a.AuthUsercase.VerifyToken(ctx, dto.NewFactory().NewAuthVerifyRequest(token))
 			switch {
 			case errors.Is(err, auth.ErrUnauthorized):
-				return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+				return echo.NewHTTPError(http.StatusUnauthorized)
 			case errors.Is(err, auth.ErrSystemError):
 				logger.WithField("error", err).Error("")
-				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+				return echo.NewHTTPError(http.StatusInternalServerError)
 			case err != nil:
 				logger.WithField("error", err).Error("")
-				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+				return echo.NewHTTPError(http.StatusInternalServerError)
 			}
 
 			// if token is valid, process request
