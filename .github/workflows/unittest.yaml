@@ -12,13 +12,20 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+
     - name: Install Go
       uses: actions/setup-go@v2
       with:
         go-version: ${{ env.GOVERSION }}
 
-    - name: Checkout Code
-      uses: actions/checkout@v2
+    - uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
 
     - name: Check If $DOCKER_COMPOSE_FILE exist
       run: echo "FOUND_DOCKER_COMPOSE=$(test -f $DOCKER_COMPOSE_FILE && echo FOUND || echo NOT_FOUND)" >> $GITHUB_ENV
