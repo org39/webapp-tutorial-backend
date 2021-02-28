@@ -20,11 +20,11 @@ func newInfra(dbConnectorFn func(*Config) (driver.Connector, error)) error {
 	logger := log.Wrap(log.Log.WithField("service_name", conf.ServieName))
 
 	// database
-	mysqlConn, err := dbConnectorFn(conf)
+	dbConn, err := dbConnectorFn(conf)
 	if err != nil {
 		return err
 	}
-	database, err := db.New(mysqlConn)
+	database, err := db.New(dbConn)
 	if err != nil {
 		return err
 	}
