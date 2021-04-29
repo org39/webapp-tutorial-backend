@@ -72,3 +72,10 @@ func (f *Factory) FromTodoDTO(d *dto.Todo) (*Todo, error) {
 		Deleted:   d.Deleted,
 	}, nil
 }
+
+func (f *Factory) NewAuthTokenPair(token string, refreshToken string) *AuthTokenPair {
+	return &AuthTokenPair{
+		AccessToken:  token,
+		RefreshToken: refreshToken,
+	}
+}

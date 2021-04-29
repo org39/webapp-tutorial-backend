@@ -31,15 +31,10 @@ func WithRepository(r Repository) func(*Service) error {
 	}
 }
 
-func (s *Service) Create(ctx context.Context, u *dto.User, content string) (*dto.Todo, error) {
+func (s *Service) Create(ctx context.Context, user *entity.User, content string) (*entity.Todo, error) {
 	// test some validation on req
-	if err := u.Valid(); err != nil {
+	if err := user.Valid(); err != nil {
 		return nil, fmt.Errorf("%s: invalid request: %w", err, ErrInvalidRequest)
-	}
-
-	user, err := entity.NewFactory().FromUserDTO(u)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", err, ErrSystemError)
 	}
 
 	todo, err := entity.NewFactory().NewTodo(user, content)
@@ -57,22 +52,43 @@ func (s *Service) Create(ctx context.Context, u *dto.User, content string) (*dto
 		return nil, err
 	}
 
-	return todoDTO, nil
+	return todo, nil
 }
 
-func (s *Service) FetchAllByUser(ctx context.Context, u *dto.User) ([]*dto.Todo, error) {
+func (s *Service) FetchAllByUser(ctx context.Context, user *entity.User) ([]*entity.Todo, error) {
 	// test some validation on req
-	if err := u.Valid(); err != nil {
+	if err := user.Valid(); err != nil {
 		return nil, fmt.Errorf("%s: invalid request: %w", err, ErrInvalidRequest)
 	}
 
-	return s.Repository.FetchAllByUser(ctx, u)
+	userDTO := dto.NewFactory().NewUser(user.ID, user.Email, user.Password, user.CreatedAt)
+	todoDTOs, err := s.Repository.FetchAllByUser(ctx, userDTO)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", err, ErrDatabaseError)
+	}
+
+	todos := make([]*entity.Todo, len(todoDTOs))
+	for i, todoDTO := range todoDTOs {
+		todo, err := entity.NewFactory().FromTodoDTO(todoDTO)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", err, ErrSystemError)
+		}
+
+		todos[i] = todo
+	}
+
+	return todos, nil
 }
 
-func (s *Service) FetchByID(ctx context.Context, u *dto.User, id string) (*dto.Todo, error) {
-	todo, err := s.Repository.FetchByID(ctx, id)
+func (s *Service) FetchByID(ctx context.Context, u *entity.User, id string) (*entity.Todo, error) {
+	todoDTO, err := s.Repository.FetchByID(ctx, id)
 	if err != nil {
 		return nil, err
+	}
+
+	todo, err := entity.NewFactory().FromTodoDTO(todoDTO)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", err, ErrSystemError)
 	}
 
 	if u.ID != todo.UserID {
@@ -82,19 +98,26 @@ func (s *Service) FetchByID(ctx context.Context, u *dto.User, id string) (*dto.T
 	return todo, nil
 }
 
-func (s *Service) Update(ctx context.Context, u *dto.User, id string, t *dto.TodoUpdateRequest) (*dto.Todo, error) {
+func (s *Service) Update(ctx context.Context, user *entity.User, id string, content string, completed bool, deleted bool) (*entity.Todo, error) {
 	// fetch todo
 	ori, err := s.Repository.FetchByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	if u.ID != ori.UserID {
+	if user.ID != ori.UserID {
 		return nil, ErrUnauthorized
 	}
 
 	// create new Todo
-	newTodo := dto.NewFactory().NewTodo(ori.ID, ori.UserID, t.Content, t.Completed, ori.CreatedAt, ori.UpdatedAt, t.Deleted)
+	newTodo, err := entity.NewFactory().FromTodoDTO(ori)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", err, ErrSystemError)
+	}
+
+	newTodo.Content = content
+	newTodo.Completed = completed
+	newTodo.Deleted = deleted
 
 	// test some validation on new Todo
 	if err := newTodo.Valid(); err != nil {
@@ -102,20 +125,21 @@ func (s *Service) Update(ctx context.Context, u *dto.User, id string, t *dto.Tod
 	}
 
 	// Update
-	if err := s.Repository.Update(ctx, newTodo); err != nil {
+	newTodoDTO := dto.NewFactory().NewTodo(newTodo.ID, newTodo.UserID, newTodo.Content, newTodo.Completed, newTodo.CreatedAt, newTodo.UpdatedAt, newTodo.Deleted)
+	if err := s.Repository.Update(ctx, newTodoDTO); err != nil {
 		return nil, err
 	}
 
 	return newTodo, nil
 }
 
-func (s *Service) Delete(ctx context.Context, u *dto.User, id string) error {
+func (s *Service) Delete(ctx context.Context, user *entity.User, id string) error {
 	t, err := s.Repository.FetchByID(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	if u.ID != t.UserID {
+	if user.ID != t.UserID {
 		return ErrUnauthorized
 	}
 
