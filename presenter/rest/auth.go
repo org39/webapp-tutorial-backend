@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/org39/webapp-tutorial-backend/entity/dto"
 	"github.com/org39/webapp-tutorial-backend/usecase/auth"
 
 	"github.com/labstack/echo/v4"
@@ -31,6 +30,10 @@ func (c *AuthorizedContext) ID() string {
 	return c.id
 }
 
+func newAuthrizedContext(c echo.Context, id string) *AuthorizedContext {
+	return &AuthorizedContext{c, id}
+}
+
 func (a *AuthMiddleware) Middleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -49,7 +52,7 @@ func (a *AuthMiddleware) Middleware() echo.MiddlewareFunc {
 			}
 
 			// verify token
-			id, err := a.AuthUsercase.VerifyToken(ctx, dto.NewFactory().NewAuthVerifyRequest(token))
+			id, err := a.AuthUsercase.VerifyToken(ctx, token)
 			switch {
 			case errors.Is(err, auth.ErrUnauthorized):
 				return echo.NewHTTPError(http.StatusUnauthorized)
@@ -61,8 +64,8 @@ func (a *AuthMiddleware) Middleware() echo.MiddlewareFunc {
 				return echo.NewHTTPError(http.StatusInternalServerError)
 			}
 
-			// if token is valid, process request
-			authorizedContext := &AuthorizedContext{c, id}
+			// if token is valid, process request with authrized context
+			authorizedContext := newAuthrizedContext(c, id)
 			err = next(authorizedContext)
 			if err != nil {
 				c.Error(err)

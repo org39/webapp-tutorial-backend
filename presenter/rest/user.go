@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/org39/webapp-tutorial-backend/entity/dto"
+	"github.com/org39/webapp-tutorial-backend/presenter/rest/rr"
 	"github.com/org39/webapp-tutorial-backend/usecase/auth"
 	"github.com/org39/webapp-tutorial-backend/usecase/user"
 
@@ -35,12 +35,12 @@ func (d *UserDispatcher) Register() echo.HandlerFunc {
 		ctx := req.Context()
 		logger := d.Logger.LoggerWithSpan(ctx)
 
-		payload := dto.NewFactory().NewUserSignUpRequest("", "")
+		payload := rr.NewFactory().NewUserSignUpRequest("", "")
 		if err := c.Bind(payload); err != nil {
 			return c.NoContent(http.StatusBadRequest)
 		}
 
-		response, tokens, err := d.UserUsecase.SignUp(ctx, payload)
+		user, tokens, err := d.UserUsecase.SignUp(ctx, payload.Email, payload.PlainPassword)
 		if err != nil {
 			return toHTTPError(logger, err)
 		}
@@ -54,9 +54,9 @@ func (d *UserDispatcher) Register() echo.HandlerFunc {
 		}
 		c.SetCookie(cookie)
 
-		return c.JSONPretty(http.StatusCreated, map[string]interface{}{
-			"user":         response,
-			"access_token": tokens.AccessToken}, "  ")
+		return c.JSON(http.StatusCreated,
+			rr.NewFactory().NewUserSignUpResponse(user.Email, user.CreatedAt, tokens.AccessToken),
+		)
 	}
 }
 
@@ -66,12 +66,12 @@ func (d *UserDispatcher) Login() echo.HandlerFunc {
 		ctx := req.Context()
 		logger := d.Logger.LoggerWithSpan(ctx)
 
-		payload := dto.NewFactory().NewUserLoginRequest("", "")
+		payload := rr.NewFactory().NewUserLoginRequest("", "")
 		if err := c.Bind(payload); err != nil {
 			return c.NoContent(http.StatusBadRequest)
 		}
 
-		tokens, err := d.UserUsecase.Login(ctx, payload)
+		tokens, err := d.UserUsecase.Login(ctx, payload.Email, payload.PlainPassword)
 		if err != nil {
 			return toHTTPError(logger, err)
 		}
@@ -85,8 +85,9 @@ func (d *UserDispatcher) Login() echo.HandlerFunc {
 		}
 		c.SetCookie(cookie)
 
-		return c.JSONPretty(http.StatusOK, map[string]interface{}{
-			"access_token": tokens.AccessToken}, "  ")
+		return c.JSON(http.StatusOK,
+			rr.NewFactory().NewUserLoginResponse(tokens.AccessToken),
+		)
 	}
 }
 
@@ -101,8 +102,8 @@ func (d *UserDispatcher) Refresh() echo.HandlerFunc {
 			return toHTTPError(logger, err)
 		}
 
-		payload := dto.NewFactory().NewUserRefreshRequest(cookie.Value)
-		tokens, err := d.UserUsecase.Refresh(ctx, payload)
+		payload := rr.NewFactory().NewUserRefreshRequest(cookie.Value)
+		tokens, err := d.UserUsecase.Refresh(ctx, payload.RefreshToken)
 		if err != nil {
 			return toHTTPError(logger, err)
 		}
@@ -116,8 +117,9 @@ func (d *UserDispatcher) Refresh() echo.HandlerFunc {
 		}
 		c.SetCookie(newCookie)
 
-		return c.JSONPretty(http.StatusOK, map[string]interface{}{
-			"access_token": tokens.AccessToken}, "  ")
+		return c.JSON(http.StatusOK,
+			rr.NewFactory().NewUserRefreshResponse(tokens.AccessToken),
+		)
 	}
 }
 

@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/org39/webapp-tutorial-backend/entity"
 	"github.com/org39/webapp-tutorial-backend/entity/dto"
 )
 
@@ -18,11 +19,11 @@ var (
 )
 
 type Usecase interface {
-	Create(ctx context.Context, u *dto.User, content string) (*dto.Todo, error)
-	FetchAllByUser(ctx context.Context, u *dto.User) ([]*dto.Todo, error)
-	FetchByID(ctx context.Context, u *dto.User, id string) (*dto.Todo, error)
-	Update(ctx context.Context, u *dto.User, id string, t *dto.TodoUpdateRequest) (*dto.Todo, error)
-	Delete(ctx context.Context, u *dto.User, id string) error
+	Create(ctx context.Context, user *entity.User, content string) (*entity.Todo, error)
+	FetchAllByUser(ctx context.Context, user *entity.User) ([]*entity.Todo, error)
+	FetchByID(ctx context.Context, user *entity.User, id string) (*entity.Todo, error)
+	Update(ctx context.Context, user *entity.User, id string, content string, completed bool, deleted bool) (*entity.Todo, error)
+	Delete(ctx context.Context, user *entity.User, id string) error
 }
 
 type Repository interface {

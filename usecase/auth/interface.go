@@ -6,7 +6,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/org39/webapp-tutorial-backend/entity/dto"
+	"github.com/org39/webapp-tutorial-backend/entity"
 )
 
 var (
@@ -16,7 +16,7 @@ var (
 )
 
 type Usecase interface {
-	GenereateToken(ctx context.Context, req *dto.AuthGenerateRequest) (*dto.AuthTokenPair, error)
-	RefreshToken(ctx context.Context, req *dto.AuthRefreshRequest) (*dto.AuthTokenPair, error)
-	VerifyToken(ctx context.Context, req *dto.AuthVerifyRequest) (string, error)
+	GenereateToken(ctx context.Context, id string) (*entity.AuthTokenPair, error)
+	RefreshToken(ctx context.Context, refreshToken string) (*entity.AuthTokenPair, error)
+	VerifyToken(ctx context.Context, accessToken string) (string, error)
 }
