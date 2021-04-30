@@ -45,7 +45,7 @@ func (d *TodoDispatcher) GetAllByUser() echo.HandlerFunc {
 			return toHTTPError(logger, err)
 		}
 
-		todos, err := d.TodoUsecase.FetchAllByUser(ctx, user)
+		todos, err := d.TodoUsecase.FetchAllByUser(ctx, user, false, false)
 		if err != nil {
 			return toTodoHTTPError(logger, err)
 		}

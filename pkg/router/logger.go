@@ -1,6 +1,7 @@
 package router
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/org39/webapp-tutorial-backend/pkg/log"
@@ -37,15 +38,16 @@ func loggerMiddleware(logger *log.Logger) echo.MiddlewareFunc {
 				"http_remote_ip":     c.RealIP(),
 			})
 
+			msg := fmt.Sprintf("%s %s", req.Method, req.RequestURI)
 			switch {
 			case status >= 500:
-				accessLog.Error()
+				accessLog.Error(msg)
 			case status >= 400:
-				accessLog.Warn()
+				accessLog.Warn(msg)
 			case status >= 300:
-				accessLog.Debug()
+				accessLog.Debug(msg)
 			default:
-				accessLog.Debug()
+				accessLog.Debug(msg)
 			}
 
 			return nil

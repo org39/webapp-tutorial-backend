@@ -24,7 +24,7 @@ type TodoRepoTestSuite struct {
 }
 
 func (s *TodoRepoTestSuite) SetupTest() {
-	mockdb, mock, err := sqlmock.New()
+	mockdb, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	if err != nil {
 		assert.Fail(s.T(), fmt.Sprintf("fail to sqlmock: %s", err))
 	}
@@ -53,7 +53,7 @@ func (s *TodoRepoTestSuite) TestStoreSuccess() {
 	id := "4daaaea8-4721-4644-aaac-7958805b4530"
 	t := dto.NewFactory().NewTodo(id, userID, "things todo", false, time.Now(), time.Now(), false)
 
-	q := "INSERT INTO todos"
+	q := "INSERT INTO todos (id,user_id,content,completed,created_at,updated_at,deleted) VALUES (?,?,?,?,?,?,?)"
 	s.Sqlmock.ExpectBegin()
 	s.Sqlmock.ExpectExec(q).
 		WithArgs(t.ID, t.UserID, t.Content, t.Completed, t.CreatedAt, t.UpdatedAt, t.Deleted).
@@ -73,7 +73,7 @@ func (s *TodoRepoTestSuite) TestUpdateSuccess() {
 	id := "4daaaea8-4721-4644-aaac-7958805b4530"
 	t := dto.NewFactory().NewTodo(id, userID, "things todo", false, time.Now(), time.Now(), false)
 
-	q := "UPDATE todos"
+	q := "UPDATE todos SET content = ?, completed = ?, deleted = ? WHERE id = ?"
 	s.Sqlmock.ExpectBegin()
 	s.Sqlmock.ExpectExec(q).
 		WithArgs(t.Content, t.Completed, t.Deleted, t.ID).
@@ -154,13 +154,13 @@ func (s *TodoRepoTestSuite) TestFetchAllByUserNotExist() {
 	ctx := context.Background()
 
 	u := dto.NewFactory().NewUser("5c2dd83a-6250-40f3-a47e-21d957c07d06", "hatsune@miku.com", "PASSWORD", time.Now())
-	q := "SELECT id, user_id, content, completed, created_at, updated_at, deleted FROM todos WHERE user_id = ?"
+	q := "SELECT id, user_id, content, completed, created_at, updated_at, deleted FROM todos WHERE completed = ? AND deleted = ? AND user_id = ?"
 	s.Sqlmock.ExpectQuery(q).
-		WithArgs(u.ID).
+		WithArgs(false, false, u.ID).
 		WillReturnError(sql.ErrNoRows)
 
 	// assert
-	res, err := s.TodoRepository.FetchAllByUser(ctx, u)
+	res, err := s.TodoRepository.FetchAllByUser(ctx, u, false, false)
 	assert.NotNil(s.T(), res)
 	assert.Empty(s.T(), res)
 	assert.NoError(s.T(), err)

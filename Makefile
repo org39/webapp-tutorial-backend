@@ -18,19 +18,19 @@ $(TOOLS_DIR)/mockery: $(TOOLS_MOD_DIR)/go.mod $(TOOLS_MOD_DIR)/go.sum $(TOOLS_MO
 lint: $(TOOLS_DIR)/golangci-lint
 	@echo LINT
 	@$(TOOLS_DIR)/golangci-lint run -c .github/linters/.golangci.yaml --out-format colored-line-number
-	@printf "LINT... \033[0;32m [OK] \033[0m"
+	@printf "LINT... \033[0;32m [OK] \033[0m\n"
 
 .PHONY: test
 test: gen
 	@echo SMALL TEST
 	@go test -test.short ./...
-	@printf "SMALL TEST... \033[0;32m [OK] \033[0m"
+	@printf "SMALL TEST... \033[0;32m [OK] \033[0m\n"
 
 test-medium: gen
 	@echo MEDIUM TEST
 	@rm -rf test/report
 	@go test ./...
-	@printf "MEDIUM TEST... \033[0;32m [OK] \033[0m"
+	@printf "MEDIUM TEST... \033[0;32m [OK] \033[0m\n"
 
 .PHONY: test-with-coverage
 test-with-coverage:
@@ -63,3 +63,6 @@ gen/mock: $(TOOLS_DIR)/mockery
 	@find ./usecase -type d -name mocks | xargs rm -rf
 	@go generate ./...
 
+# git hooks
+.PHONY: pre-push
+pre-push: test lint

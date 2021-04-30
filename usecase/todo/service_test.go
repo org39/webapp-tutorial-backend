@@ -88,10 +88,10 @@ func (s *TodoServiceTestSuite) TestFetctAllByUserSuccess() {
 	id1 := "fb2211c9-5d53-4a44-895b-79c42174d521"
 	todoDTO1 := dto.NewFactory().NewTodo(id1, userID, "things todo", false, time.Now(), time.Now(), false)
 
-	s.Repository.On("FetchAllByUser", ctx, userDTO).Return([]*dto.Todo{todoDTO0, todoDTO1}, nil)
+	s.Repository.On("FetchAllByUser", ctx, userDTO, false, false).Return([]*dto.Todo{todoDTO0, todoDTO1}, nil)
 
 	// assert
-	res, err := s.Usecase.FetchAllByUser(ctx, user)
+	res, err := s.Usecase.FetchAllByUser(ctx, user, false, false)
 	assert.NoError(s.T(), userErr)
 	assert.NoError(s.T(), err)
 	assert.Len(s.T(), res, 2)
