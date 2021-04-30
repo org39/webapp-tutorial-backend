@@ -124,8 +124,8 @@ func (d *UserDispatcher) Refresh() echo.HandlerFunc {
 }
 
 func toHTTPError(logger *log.Logger, err error) error {
-	// errors defined in usecase
 	switch {
+	// errors defined in usecase
 	case errors.Is(err, user.ErrInvalidRequest):
 		return echo.NewHTTPError(http.StatusBadRequest)
 
@@ -142,6 +142,10 @@ func toHTTPError(logger *log.Logger, err error) error {
 
 	case errors.Is(err, user.ErrUnauthorized):
 		return echo.NewHTTPError(http.StatusUnauthorized)
+
+	// errors defined in net/http
+	case errors.Is(err, http.ErrNoCookie):
+		return echo.NewHTTPError(http.StatusBadRequest)
 	}
 
 	logger.WithError(err).Error()
