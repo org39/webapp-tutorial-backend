@@ -24,7 +24,7 @@ type UserRepoTestSuite struct {
 }
 
 func (s *UserRepoTestSuite) SetupTest() {
-	mockdb, mock, err := sqlmock.New()
+	mockdb, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	if err != nil {
 		assert.Fail(s.T(), fmt.Sprintf("fail to sqlmock: %s", err))
 	}
@@ -87,7 +87,7 @@ func (s *UserRepoTestSuite) TestStoreSuccess() {
 	ctx := context.Background()
 	u := dto.NewFactory().NewUser("5c2dd83a-6250-40f3-a47e-21d957c07d06", "hatsune@miku.com", "PASSWORD", time.Now())
 
-	q := "INSERT INTO users"
+	q := "INSERT INTO users (id,email,password,created_at) VALUES (?,?,?,?)"
 	s.Sqlmock.ExpectBegin()
 	s.Sqlmock.ExpectExec(q).
 		WithArgs(u.ID, u.Email, u.Password, u.CreatedAt).
@@ -104,7 +104,7 @@ func (s *UserRepoTestSuite) TestUpdateSuccess() {
 	ctx := context.Background()
 	u := dto.NewFactory().NewUser("5c2dd83a-6250-40f3-a47e-21d957c07d06", "hatsune@miku.com", "PASSWORD", time.Now())
 
-	q := "UPDATE users"
+	q := "UPDATE users SET email = ?, password = ? WHERE id = ?"
 	s.Sqlmock.ExpectBegin()
 	s.Sqlmock.ExpectExec(q).
 		WithArgs(u.Email, u.Password, u.ID).

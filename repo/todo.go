@@ -96,8 +96,20 @@ func (r *TodoRepository) Delete(ctx context.Context, t *dto.Todo) error {
 	return nil
 }
 
-func (r *TodoRepository) FetchAllByUser(ctx context.Context, u *dto.User) ([]*dto.Todo, error) {
-	query, args, err := r.selectTodo().Where(sq.Eq{"user_id": u.ID}).ToSql()
+func (r *TodoRepository) FetchAllByUser(ctx context.Context, u *dto.User, showCompleted bool, showDeleted bool) ([]*dto.Todo, error) {
+	q := r.selectTodo()
+	switch {
+	case showCompleted && showDeleted:
+		q = q.Where(sq.Eq{"user_id": u.ID})
+	case !showCompleted && showDeleted:
+		q = q.Where(sq.Eq{"user_id": u.ID, "completed": false})
+	case !showCompleted && !showDeleted:
+		q = q.Where(sq.Eq{"user_id": u.ID, "completed": false, "deleted": false})
+	case showCompleted && !showDeleted:
+		q = q.Where(sq.Eq{"user_id": u.ID, "deleted": false})
+	}
+
+	query, args, err := q.ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", err.Error(), todo.ErrDatabaseError)
 	}

@@ -20,7 +20,7 @@ var (
 
 type Usecase interface {
 	Create(ctx context.Context, user *entity.User, content string) (*entity.Todo, error)
-	FetchAllByUser(ctx context.Context, user *entity.User) ([]*entity.Todo, error)
+	FetchAllByUser(ctx context.Context, user *entity.User, showCompleted bool, showDeleted bool) ([]*entity.Todo, error)
 	FetchByID(ctx context.Context, user *entity.User, id string) (*entity.Todo, error)
 	Update(ctx context.Context, user *entity.User, id string, content string, completed bool, deleted bool) (*entity.Todo, error)
 	Delete(ctx context.Context, user *entity.User, id string) error
@@ -30,6 +30,6 @@ type Repository interface {
 	Store(ctx context.Context, t *dto.Todo) error
 	Update(ctx context.Context, t *dto.Todo) error
 	Delete(ctx context.Context, t *dto.Todo) error
-	FetchAllByUser(ctx context.Context, u *dto.User) ([]*dto.Todo, error)
+	FetchAllByUser(ctx context.Context, u *dto.User, showCompleted bool, showDeleted bool) ([]*dto.Todo, error)
 	FetchByID(ctx context.Context, id string) (*dto.Todo, error)
 }

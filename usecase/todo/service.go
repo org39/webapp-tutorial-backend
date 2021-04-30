@@ -55,14 +55,14 @@ func (s *Service) Create(ctx context.Context, user *entity.User, content string)
 	return todo, nil
 }
 
-func (s *Service) FetchAllByUser(ctx context.Context, user *entity.User) ([]*entity.Todo, error) {
+func (s *Service) FetchAllByUser(ctx context.Context, user *entity.User, showCompleted bool, showDeleted bool) ([]*entity.Todo, error) {
 	// test some validation on req
 	if err := user.Valid(); err != nil {
 		return nil, fmt.Errorf("%s: invalid request: %w", err, ErrInvalidRequest)
 	}
 
 	userDTO := dto.NewFactory().NewUser(user.ID, user.Email, user.Password, user.CreatedAt)
-	todoDTOs, err := s.Repository.FetchAllByUser(ctx, userDTO)
+	todoDTOs, err := s.Repository.FetchAllByUser(ctx, userDTO, showCompleted, showDeleted)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", err, ErrDatabaseError)
 	}
