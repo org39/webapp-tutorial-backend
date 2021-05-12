@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/org39/webapp-tutorial-backend/app"
+	app "github.com/org39/webapp-tutorial-backend/app/server"
 
 	"github.com/labstack/echo/v4"
 	"github.com/org39/webapp-tutorial-backend/pkg/testreport"

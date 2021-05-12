@@ -9,11 +9,12 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/org39/webapp-tutorial-backend/app"
+	app "github.com/org39/webapp-tutorial-backend/app/server"
 	"github.com/org39/webapp-tutorial-backend/presenter/rest"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
@@ -29,6 +30,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	server.Use(middleware.CORSWithConfig(
+		middleware.DefaultCORSConfig),
+	)
 
 	// server start and wait signal or error
 	quit := make(chan os.Signal, 5)

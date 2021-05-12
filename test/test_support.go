@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/org39/webapp-tutorial-backend/app"
+	app "github.com/org39/webapp-tutorial-backend/app/server"
 	"github.com/org39/webapp-tutorial-backend/presenter/rest"
 
 	"github.com/go-sql-driver/mysql"
