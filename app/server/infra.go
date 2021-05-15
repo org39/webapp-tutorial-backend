@@ -16,8 +16,8 @@ func newInfra(dbConnectorFn func(*Config) (driver.Connector, error)) error {
 		return err
 	}
 
-	// logger
-	logger := log.Wrap(log.Log.WithField("service_name", conf.ServieName))
+	// set loglevel
+	log.SetLevel(conf.LogLevel)
 
 	// database
 	dbConn, err := dbConnectorFn(conf)
@@ -32,7 +32,6 @@ func newInfra(dbConnectorFn func(*Config) (driver.Connector, error)) error {
 	// build depency graph
 	err = DepencencyInjector.Provide(
 		&inject.Object{Value: conf},
-		&inject.Object{Value: logger},
 		&inject.Object{Value: database},
 		&inject.Object{Name: "repo.user.table", Value: conf.UserTable},
 		&inject.Object{Name: "repo.todo.table", Value: conf.TodoTable},

@@ -33,7 +33,7 @@ func (d *UserDispatcher) Register() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		req := c.Request()
 		ctx := req.Context()
-		logger := d.Logger.LoggerWithSpan(ctx)
+		logger := log.LoggerWithSpan(ctx)
 
 		payload := rr.NewFactory().NewUserSignUpRequest("", "")
 		if err := c.Bind(payload); err != nil {
@@ -64,7 +64,7 @@ func (d *UserDispatcher) Login() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		req := c.Request()
 		ctx := req.Context()
-		logger := d.Logger.LoggerWithSpan(ctx)
+		logger := log.LoggerWithSpan(ctx)
 
 		payload := rr.NewFactory().NewUserLoginRequest("", "")
 		if err := c.Bind(payload); err != nil {
@@ -95,7 +95,7 @@ func (d *UserDispatcher) Refresh() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		req := c.Request()
 		ctx := req.Context()
-		logger := d.Logger.LoggerWithSpan(ctx)
+		logger := log.LoggerWithSpan(ctx)
 
 		cookie, err := c.Cookie(refreshTokenCookie)
 		if err != nil {

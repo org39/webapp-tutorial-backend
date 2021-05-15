@@ -2,7 +2,9 @@ package log
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 	"go.opencensus.io/trace"
@@ -27,17 +29,22 @@ type Logger struct {
 // Log global logger
 var Log *Logger = Wrap(logrus.WithFields(logrus.Fields{}))
 
+// Wrap wrap *logrus.Entry to log.Logger
+func Wrap(logrusEntry *logrus.Entry) *Logger {
+	return &Logger{logrusEntry}
+}
+
 // LoggerWithSpan spwan new logger with trace span
-func (l *Logger) LoggerWithSpan(ctx context.Context) *Logger {
+func LoggerWithSpan(ctx context.Context) *Logger {
 	span := trace.FromContext(ctx)
 	if span == nil {
-		return l
+		return Log
 	}
 
 	spanID := span.SpanContext().SpanID.String()
 	traceID := span.SpanContext().TraceID.String()
 
-	newLogrus := l.WithFields(logrus.Fields{
+	newLogrus := Log.WithFields(logrus.Fields{
 		"trace": traceID,
 		"span":  spanID,
 	})
@@ -45,7 +52,116 @@ func (l *Logger) LoggerWithSpan(ctx context.Context) *Logger {
 	return Wrap(newLogrus)
 }
 
-// Wrap wrap *logrus.Entry to log.Logger
-func Wrap(logrusEntry *logrus.Entry) *Logger {
-	return &Logger{logrusEntry}
+func WithDefaultFields(key string, value interface{}) {
+	Log = Wrap(Log.WithField(key, value))
+}
+
+func SetLevel(level string) {
+	switch strings.ToLower(level) {
+	case "panic":
+		logrus.SetLevel(logrus.PanicLevel)
+	case "fatal":
+		logrus.SetLevel(logrus.FatalLevel)
+	case "error":
+		logrus.SetLevel(logrus.ErrorLevel)
+	case "warn":
+		logrus.SetLevel(logrus.WarnLevel)
+	case "info":
+		logrus.SetLevel(logrus.InfoLevel)
+	case "debug":
+		logrus.SetLevel(logrus.DebugLevel)
+	case "trace":
+		logrus.SetLevel(logrus.TraceLevel)
+	default:
+		Log.Errorf("unknown log level %s, set loglevel Debug", level)
+		logrus.SetLevel(logrus.DebugLevel)
+	}
+}
+
+// ---------------------------------------
+// from logrus
+
+func WithField(key string, value interface{}) *Logger {
+	return Wrap(Log.WithField(key, value))
+}
+
+func Trace(args ...interface{}) {
+	Log.Log(logrus.TraceLevel, args...)
+}
+
+func Debug(args ...interface{}) {
+	Log.Log(logrus.DebugLevel, args...)
+}
+
+func Print(args ...interface{}) {
+	Log.Info(args...)
+}
+
+func Info(args ...interface{}) {
+	Log.Log(logrus.InfoLevel, args...)
+}
+
+func Warn(args ...interface{}) {
+	Log.Log(logrus.WarnLevel, args...)
+}
+
+func Warning(args ...interface{}) {
+	Log.Warn(args...)
+}
+
+func Error(args ...interface{}) {
+	Log.Log(logrus.ErrorLevel, args...)
+}
+
+func Fatal(args ...interface{}) {
+	Log.Log(logrus.FatalLevel, args...)
+	Log.Logger.Exit(1)
+}
+
+func Panic(args ...interface{}) {
+	Log.Log(logrus.PanicLevel, args...)
+	panic(fmt.Sprint(args...))
+}
+
+func Logf(level logrus.Level, format string, args ...interface{}) {
+	if Log.Logger.IsLevelEnabled(level) {
+		Log.Log(level, fmt.Sprintf(format, args...))
+	}
+}
+
+func Tracef(format string, args ...interface{}) {
+	Log.Logf(logrus.TraceLevel, format, args...)
+}
+
+func Debugf(format string, args ...interface{}) {
+	Log.Logf(logrus.DebugLevel, format, args...)
+}
+
+func Infof(format string, args ...interface{}) {
+	Log.Logf(logrus.InfoLevel, format, args...)
+}
+
+func Printf(format string, args ...interface{}) {
+	Log.Infof(format, args...)
+}
+
+func Warnf(format string, args ...interface{}) {
+	Log.Logf(logrus.WarnLevel, format, args...)
+}
+
+func Warningf(format string, args ...interface{}) {
+	Log.Warnf(format, args...)
+}
+
+func Errorf(format string, args ...interface{}) {
+	Log.Logf(logrus.ErrorLevel, format, args...)
+}
+
+func Fatalf(format string, args ...interface{}) {
+	Log.Logf(logrus.FatalLevel, format, args...)
+	Log.Logger.Exit(1)
+}
+
+func Panicf(format string, args ...interface{}) {
+	Log.Logf(logrus.PanicLevel, format, args...)
 }

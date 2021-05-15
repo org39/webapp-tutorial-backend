@@ -9,16 +9,14 @@ import (
 
 	"github.com/facebookgo/inject"
 	"github.com/org39/webapp-tutorial-backend/pkg/db"
-	"github.com/org39/webapp-tutorial-backend/pkg/log"
 )
 
 var DepencencyInjector inject.Graph
 
 type App struct {
 	// infra
-	Config     *Config     `inject:""`
-	RootLogger *log.Logger `inject:""`
-	DB         *db.DB      `inject:""`
+	Config *Config `inject:""`
+	DB     *db.DB  `inject:""`
 
 	// application usecase
 	AuthUsecase auth.Usecase `inject:""`

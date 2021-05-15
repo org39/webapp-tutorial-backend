@@ -8,12 +8,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/org39/webapp-tutorial-backend/app"
+	app "github.com/org39/webapp-tutorial-backend/app/server"
 	"github.com/org39/webapp-tutorial-backend/presenter/rest"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/labstack/echo/v4"
-	"github.com/sirupsen/logrus"
+	"github.com/org39/webapp-tutorial-backend/pkg/log"
 	"github.com/steinfletcher/apitest"
 	jpassert "github.com/steinfletcher/apitest-jsonpath"
 	apitestdb "github.com/steinfletcher/apitest/x/db"
@@ -37,10 +37,10 @@ func buildTestServer() (*app.App, *echo.Echo, error) {
 	}
 
 	// disable log
-	application.RootLogger.Logger.SetLevel(logrus.PanicLevel)
+	log.SetLevel("panic")
 
 	// attach application to RestAPI presenter
-	server, err := rest.New(&app.DepencencyInjector, application.RootLogger, func(c echo.Context) error {
+	server, err := rest.New(&app.DepencencyInjector, func(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
 	})
 	if err != nil {

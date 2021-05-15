@@ -3,8 +3,6 @@ package router
 import (
 	"strings"
 
-	"github.com/org39/webapp-tutorial-backend/pkg/log"
-
 	"github.com/HatsuneMiku3939/ocecho"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -12,11 +10,10 @@ import (
 	"go.opencensus.io/trace"
 )
 
-func New(logger *log.Logger) (*echo.Echo, error) {
+func New() (*echo.Echo, error) {
 	e := echo.New()
 
-	accessLogger := log.Wrap(logger.WithField("category", "accessLog"))
-	e.Use(loggerMiddleware(accessLogger))
+	e.Use(loggerMiddleware())
 	e.Use(middleware.Recover())
 	e.Use(middleware.GzipWithConfig(middleware.DefaultGzipConfig))
 	e.Use(ocecho.OpenCensusMiddleware(

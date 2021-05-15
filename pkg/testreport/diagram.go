@@ -182,7 +182,7 @@ func newHTMLTemplateModel(r *apitest.Recorder) (htmlTemplateModel, error) {
 	}
 	var logs []logEntry
 	webSequenceDiagram := &webSequenceDiagramDSL{}
-	webSequenceDiagram.addParticipant(apitest.ConsumerName)
+	webSequenceDiagram.addParticipant(apitest.ConsumerDefaultName)
 	webSequenceDiagram.addParticipant(apitest.SystemUnderTestDefaultName)
 
 	for _, event := range r.Events {
