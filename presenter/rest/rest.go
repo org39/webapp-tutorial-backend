@@ -3,12 +3,11 @@ package rest
 import (
 	"github.com/facebookgo/inject"
 	"github.com/labstack/echo/v4"
-	"github.com/org39/webapp-tutorial-backend/pkg/log"
 	"github.com/org39/webapp-tutorial-backend/pkg/router"
 )
 
-func New(g *inject.Graph, logger *log.Logger, readiness echo.HandlerFunc) (*echo.Echo, error) {
-	server, err := router.New(logger)
+func New(g *inject.Graph, readiness echo.HandlerFunc) (*echo.Echo, error) {
+	server, err := router.New()
 	if err != nil {
 		return nil, err
 	}

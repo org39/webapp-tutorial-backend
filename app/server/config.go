@@ -7,7 +7,7 @@ import (
 )
 
 type Config struct {
-	ServieName string `default:"webapp-tutorial-backend" envconfig:"SERVICE_NAME"`
+	LogLevel string `default:"info" envconfig:"LOG_LEVEL"`
 
 	// infra
 	DatabaseHost string `required:"true" envconfig:"DATABASE_HOST"`

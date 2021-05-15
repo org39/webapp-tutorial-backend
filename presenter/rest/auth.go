@@ -18,7 +18,6 @@ const (
 
 type AuthMiddleware struct {
 	AuthUsercase auth.Usecase `inject:""`
-	Logger       *log.Logger  `inject:""`
 }
 
 type AuthorizedContext struct {
@@ -39,7 +38,7 @@ func (a *AuthMiddleware) Middleware() echo.MiddlewareFunc {
 		return func(c echo.Context) error {
 			req := c.Request()
 			ctx := req.Context()
-			logger := a.Logger.LoggerWithSpan(ctx)
+			logger := log.LoggerWithSpan(ctx)
 
 			// Get access token from header
 			authValue := req.Header.Get(authHeader)

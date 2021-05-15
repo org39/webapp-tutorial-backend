@@ -10,7 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func loggerMiddleware(logger *log.Logger) echo.MiddlewareFunc {
+func loggerMiddleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			start := time.Now()
@@ -27,7 +27,7 @@ func loggerMiddleware(logger *log.Logger) echo.MiddlewareFunc {
 			duration := time.Since(start)
 			status := res.Status
 
-			traceLogger := logger.LoggerWithSpan(ctx)
+			traceLogger := log.LoggerWithSpan(ctx)
 			accessLog := traceLogger.WithFields(logrus.Fields{
 				"http_status":        status,
 				"http_host":          req.Host,

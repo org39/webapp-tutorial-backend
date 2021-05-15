@@ -15,6 +15,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/org39/webapp-tutorial-backend/pkg/log"
 )
 
 func main() {
@@ -26,7 +27,7 @@ func main() {
 	defer application.DB.Close()
 
 	// attach application to RestAPI presenter
-	server, err := rest.New(&app.DepencencyInjector, application.RootLogger, readiness(application))
+	server, err := rest.New(&app.DepencencyInjector, readiness(application))
 	if err != nil {
 		panic(err)
 	}
@@ -46,17 +47,17 @@ func main() {
 	// wait signal or error
 	select {
 	case <-quit:
-		application.RootLogger.Info("receive signal")
+		log.Info("receive signal")
 		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
 
 		if err := server.Shutdown(ctx); err != nil {
-			application.RootLogger.WithField("error", err).Fatal("server shutdown error")
+			log.WithField("error", err).Fatal("server shutdown error")
 		} else {
-			application.RootLogger.Info("stop server")
+			log.Info("stop server")
 		}
 	case err := <-serverErr:
-		application.RootLogger.WithField("error", err).Fatal("server start error")
+		log.WithField("error", err).Fatal("server start error")
 	}
 }
 

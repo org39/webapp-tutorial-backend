@@ -16,7 +16,6 @@ type TodoDispatcher struct {
 	TodoUsecase    todo.Usecase    `inject:""`
 	UserUsecase    user.Usecase    `inject:""`
 	AuthMiddleware *AuthMiddleware `inject:""`
-	Logger         *log.Logger     `inject:""`
 }
 
 func (d *TodoDispatcher) Dispatch(e *echo.Echo) {
@@ -33,7 +32,7 @@ func (d *TodoDispatcher) GetAllByUser() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		req := c.Request()
 		ctx := req.Context()
-		logger := d.Logger.LoggerWithSpan(ctx)
+		logger := log.LoggerWithSpan(ctx)
 
 		authCtx, ok := c.(*AuthorizedContext)
 		if !ok {
@@ -60,7 +59,7 @@ func (d *TodoDispatcher) Create() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		req := c.Request()
 		ctx := req.Context()
-		logger := d.Logger.LoggerWithSpan(ctx)
+		logger := log.LoggerWithSpan(ctx)
 
 		authCtx, ok := c.(*AuthorizedContext)
 		if !ok {
@@ -92,7 +91,7 @@ func (d *TodoDispatcher) GetByID() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		req := c.Request()
 		ctx := req.Context()
-		logger := d.Logger.LoggerWithSpan(ctx)
+		logger := log.LoggerWithSpan(ctx)
 
 		authCtx, ok := c.(*AuthorizedContext)
 		if !ok {
@@ -120,7 +119,7 @@ func (d *TodoDispatcher) UpdateByID() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		req := c.Request()
 		ctx := req.Context()
-		logger := d.Logger.LoggerWithSpan(ctx)
+		logger := log.LoggerWithSpan(ctx)
 
 		authCtx, ok := c.(*AuthorizedContext)
 		if !ok {
@@ -153,7 +152,7 @@ func (d *TodoDispatcher) DeleteByID() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		req := c.Request()
 		ctx := req.Context()
-		logger := d.Logger.LoggerWithSpan(ctx)
+		logger := log.LoggerWithSpan(ctx)
 
 		authCtx, ok := c.(*AuthorizedContext)
 		if !ok {
