@@ -22,15 +22,15 @@ type AuthMiddleware struct {
 
 type AuthorizedContext struct {
 	echo.Context
-	id string
+	userID string
 }
 
-func (c *AuthorizedContext) ID() string {
-	return c.id
+func (c *AuthorizedContext) UserID() string {
+	return c.userID
 }
 
-func newAuthrizedContext(c echo.Context, id string) *AuthorizedContext {
-	return &AuthorizedContext{c, id}
+func newAuthrizedContext(c echo.Context, userID string) *AuthorizedContext {
+	return &AuthorizedContext{c, userID}
 }
 
 func (a *AuthMiddleware) Middleware() echo.MiddlewareFunc {
@@ -51,7 +51,7 @@ func (a *AuthMiddleware) Middleware() echo.MiddlewareFunc {
 			}
 
 			// verify token
-			id, err := a.AuthUsercase.VerifyToken(ctx, token)
+			userID, err := a.AuthUsercase.VerifyToken(ctx, token)
 			switch {
 			case errors.Is(err, auth.ErrUnauthorized):
 				return echo.NewHTTPError(http.StatusUnauthorized)
@@ -64,7 +64,7 @@ func (a *AuthMiddleware) Middleware() echo.MiddlewareFunc {
 			}
 
 			// if token is valid, process request with authrized context
-			authorizedContext := newAuthrizedContext(c, id)
+			authorizedContext := newAuthrizedContext(c, userID)
 			err = next(authorizedContext)
 			if err != nil {
 				c.Error(err)

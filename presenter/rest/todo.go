@@ -39,7 +39,7 @@ func (d *TodoDispatcher) GetAllByUser() echo.HandlerFunc {
 			logger.WithError(errors.New("invalid authorized context")).Error()
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
-		user, err := d.UserUsecase.FetchByID(ctx, authCtx.ID())
+		user, err := d.UserUsecase.FetchByID(ctx, authCtx.UserID())
 		if err != nil {
 			return toHTTPError(logger, err)
 		}
@@ -66,7 +66,7 @@ func (d *TodoDispatcher) Create() echo.HandlerFunc {
 			logger.WithError(errors.New("invalid authorized context")).Error()
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
-		user, err := d.UserUsecase.FetchByID(ctx, authCtx.ID())
+		user, err := d.UserUsecase.FetchByID(ctx, authCtx.UserID())
 		if err != nil {
 			return toHTTPError(logger, err)
 		}
@@ -98,7 +98,7 @@ func (d *TodoDispatcher) GetByID() echo.HandlerFunc {
 			logger.WithError(errors.New("invalid authorized context")).Error()
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
-		userDTO, err := d.UserUsecase.FetchByID(ctx, authCtx.ID())
+		userDTO, err := d.UserUsecase.FetchByID(ctx, authCtx.UserID())
 		if err != nil {
 			return toHTTPError(logger, err)
 		}
@@ -126,7 +126,7 @@ func (d *TodoDispatcher) UpdateByID() echo.HandlerFunc {
 			logger.WithError(errors.New("invalid authorized context")).Error()
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
-		user, err := d.UserUsecase.FetchByID(ctx, authCtx.ID())
+		user, err := d.UserUsecase.FetchByID(ctx, authCtx.UserID())
 		if err != nil {
 			return toHTTPError(logger, err)
 		}
@@ -159,7 +159,7 @@ func (d *TodoDispatcher) DeleteByID() echo.HandlerFunc {
 			logger.WithError(errors.New("invalid authorized context")).Error()
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
-		user, err := d.UserUsecase.FetchByID(ctx, authCtx.ID())
+		user, err := d.UserUsecase.FetchByID(ctx, authCtx.UserID())
 		if err != nil {
 			return toHTTPError(logger, err)
 		}
