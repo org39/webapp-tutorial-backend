@@ -74,7 +74,12 @@ func (u *Service) GenereateToken(ctx context.Context, id string) (*entity.AuthTo
 		return nil, fmt.Errorf("%s: generate refresh token error: %w", err, ErrSystemError)
 	}
 
-	return entity.NewFactory().NewAuthTokenPair(t, rt), nil
+	tokens := entity.NewFactory().NewAuthTokenPair(t, rt)
+	if err := tokens.Valid(); err != nil {
+		return nil, fmt.Errorf("%s: generate token error: %w", err, ErrSystemError)
+	}
+
+	return tokens, nil
 }
 
 func (u *Service) RefreshToken(ctx context.Context, refreshToken string) (*entity.AuthTokenPair, error) {
