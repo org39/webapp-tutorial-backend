@@ -44,6 +44,13 @@ func (f *Factory) NewUserRefreshResponse(accessToken string) *UserRefreshRespons
 	}
 }
 
+func (f *Factory) NewUserResponse(email string, createdAt time.Time) *UserResponse {
+	return &UserResponse{
+		Email:     email,
+		CreatedAt: createdAt,
+	}
+}
+
 // ------------------------------------------------------------------
 type UserSignUpRequest struct {
 	Email         string `json:"email"`
@@ -71,4 +78,9 @@ type UserRefreshRequest struct {
 
 type UserRefreshResponse struct {
 	AccessToken string `json:"access_token"`
+}
+
+type UserResponse struct {
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"created_at"`
 }

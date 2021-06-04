@@ -17,13 +17,17 @@ const (
 )
 
 type UserDispatcher struct {
-	UserUsecase        user.Usecase `inject:""`
-	AuthUsercase       auth.Usecase `inject:""`
-	SecureRefreshToken bool         `inject:"rest.auth.secure_refresh_token"`
-	Logger             *log.Logger  `inject:""`
+	UserUsecase        user.Usecase    `inject:""`
+	AuthUsercase       auth.Usecase    `inject:""`
+	AuthMiddleware     *AuthMiddleware `inject:""`
+	SecureRefreshToken bool            `inject:"rest.auth.secure_refresh_token"`
+	Logger             *log.Logger     `inject:""`
 }
 
 func (d *UserDispatcher) Dispatch(e *echo.Echo) {
+	auth := d.AuthMiddleware.Middleware()
+
+	e.GET("user", d.GetUser(), auth)
 	e.POST("user/register", d.Register())
 	e.POST("user/login", d.Login())
 	e.POST("user/refresh", d.Refresh())
@@ -120,6 +124,27 @@ func (d *UserDispatcher) Refresh() echo.HandlerFunc {
 		return c.JSON(http.StatusOK,
 			rr.NewFactory().NewUserRefreshResponse(tokens.AccessToken),
 		)
+	}
+}
+
+func (d *UserDispatcher) GetUser() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		req := c.Request()
+		ctx := req.Context()
+		logger := log.LoggerWithSpan(ctx)
+
+		authCtx, ok := c.(*AuthorizedContext)
+		if !ok {
+			logger.WithError(errors.New("invalid authorized context")).Error()
+			return echo.NewHTTPError(http.StatusInternalServerError)
+		}
+		user, err := d.UserUsecase.FetchByID(ctx, authCtx.UserID())
+		if err != nil {
+			return toHTTPError(logger, err)
+		}
+
+		return c.JSON(http.StatusOK,
+			rr.NewFactory().NewUserResponse(user.Email, user.CreatedAt))
 	}
 }
 
