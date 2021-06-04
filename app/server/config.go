@@ -17,7 +17,8 @@ type Config struct {
 	DatabaseName string `required:"true" envconfig:"DATABASE_NAME"`
 
 	// User usecase
-	UserTable string `required:"true" envconfig:"USER_TABLE"`
+	UserTable        string `required:"true" envconfig:"USER_TABLE"`
+	UserPasswordSalt string `required:"true" envconfig:"USER_PASSWORD_SALT"`
 
 	// Auth usecase
 	AuthSecret               string        `required:"true" envconfig:"AUTH_SECRET"`

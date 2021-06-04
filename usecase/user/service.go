@@ -12,8 +12,9 @@ import (
 )
 
 type Service struct {
-	Repository  Repository   `inject:""`
-	AuthUsecase auth.Usecase `inject:""`
+	Repository   Repository   `inject:""`
+	AuthUsecase  auth.Usecase `inject:""`
+	PasswordSalt string       `inject:"usecase.user.password_salt"`
 }
 
 func NewService(options ...func(*Service) error) (Usecase, error) {
@@ -64,7 +65,8 @@ func (u *Service) SignUp(ctx context.Context, email string, plainPassword string
 	}
 
 	// create user object
-	user, err := entity.NewFactory().NewUser(email, plainPassword)
+	saltedPassword := fmt.Sprintf("%s%s", plainPassword, u.PasswordSalt)
+	user, err := entity.NewFactory().NewUser(email, saltedPassword)
 	if err != nil {
 		return nil, nil, fmt.Errorf("%s: %w", err.Error(), ErrSystemError)
 	}
@@ -103,7 +105,8 @@ func (u *Service) Login(ctx context.Context, email string, plainPassword string)
 		return nil, fmt.Errorf("%s: %w", err, ErrSystemError)
 	}
 
-	if err := user.ValidPassword(plainPassword); err != nil {
+	saltedPassword := fmt.Sprintf("%s%s", plainPassword, u.PasswordSalt)
+	if err := user.ValidPassword(saltedPassword); err != nil {
 		return nil, fmt.Errorf("%w", ErrUnauthorized)
 	}
 
