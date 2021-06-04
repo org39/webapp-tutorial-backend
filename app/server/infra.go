@@ -35,6 +35,7 @@ func newInfra(dbConnectorFn func(*Config) (driver.Connector, error)) error {
 		&inject.Object{Value: database},
 		&inject.Object{Name: "repo.user.table", Value: conf.UserTable},
 		&inject.Object{Name: "repo.todo.table", Value: conf.TodoTable},
+		&inject.Object{Name: "usecase.user.password_salt", Value: conf.UserPasswordSalt},
 		&inject.Object{Name: "usecase.auth.secret", Value: conf.AuthSecret},
 		&inject.Object{Name: "usecase.auth.access_token_duration", Value: conf.AuthAccessTokenDuration},
 		&inject.Object{Name: "usecase.auth.refresh_token_duration", Value: conf.AuthRefreshTokenDuration},
