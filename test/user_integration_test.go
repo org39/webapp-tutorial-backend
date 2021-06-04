@@ -84,6 +84,28 @@ func (s *UserIntegrationTestSuite) TestLoginRefreshSuccess() {
 		End()
 }
 
+func (s *UserIntegrationTestSuite) TestGetUserSuccess() {
+	account := createTestAccount(s.T(), s.apiTest("TestGetUserSuccess"))
+	s.apiTest("TestGetUserSuccess").
+		Post("/user/login").
+		JSON(map[string]string{
+			"email":    account.User.Email,
+			"password": account.Password,
+		}).
+		Expect(s.T()).
+		CookiePresent("refresh_token").
+		Assert(jpassert.Present("$.access_token")).
+		Status(http.StatusOK).
+		End()
+	s.apiTest("TestGetUserSuccess").
+		Get("/user").
+		Header("Authorization", fmt.Sprintf("Bearer %s", account.AccessToken)).
+		Expect(s.T()).
+		Assert(jpassert.Equal("$.email", account.User.Email)).
+		Status(http.StatusOK).
+		End()
+}
+
 func TestUserIntegrationTest(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode")

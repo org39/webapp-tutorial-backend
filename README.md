@@ -58,6 +58,22 @@ $ curl -v --request POST -b "refresh_token=$REFRESH_TOKEN" http://localhost:8080
 {"access_token":"ACCESS_TOKE_IS_HERE"}
 ```
 
+### get user
+
+```
+$ curl -v --request GET -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" http://localhost:8080/user
+
+< HTTP/1.1 200 OK
+< Access-Control-Allow-Origin: *
+< Content-Type: application/json; charset=UTF-8
+< Vary: Accept-Encoding
+< Vary: Origin
+< Date: Fri, 04 Jun 2021 10:50:13 GMT
+< Content-Length: 65
+<
+{"email":"hatsune@miku.com","created_at":"2021-06-04T10:49:50Z"}
+```
+
 ### create TODO
 
 ```
