@@ -107,11 +107,11 @@ func (db *DB) WithTransaction(ctx context.Context, fn func(context.Context, *sql
 		switch {
 		case p != nil:
 			// a panic occurred, rollback and repanic
-			_ = tx.Rollback()
+			err = tx.Rollback()
 			panic(p)
 		case err != nil:
 			// something went wrong, rollback
-			_ = tx.Rollback()
+			err = tx.Rollback()
 		default:
 			// all good, commit
 			err = tx.Commit()

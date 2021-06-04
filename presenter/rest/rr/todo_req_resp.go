@@ -47,6 +47,7 @@ func (f *Factory) NewTodosResponse(todos []*entity.Todo) []*TodoResponse {
 }
 
 // ------------------------------------------------------------------
+
 type TodoCreatRequest struct {
 	Content string `json:"content"`
 }

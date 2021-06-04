@@ -27,7 +27,7 @@ type Logger struct {
 }
 
 // Log global logger
-var Log *Logger = Wrap(logrus.WithFields(logrus.Fields{}))
+var Log = Wrap(logrus.WithFields(logrus.Fields{}))
 
 // Wrap wrap *logrus.Entry to log.Logger
 func Wrap(logrusEntry *logrus.Entry) *Logger {

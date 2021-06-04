@@ -52,6 +52,7 @@ func (f *Factory) NewUserResponse(email string, createdAt time.Time) *UserRespon
 }
 
 // ------------------------------------------------------------------
+
 type UserSignUpRequest struct {
 	Email         string `json:"email"`
 	PlainPassword string `json:"password"`
