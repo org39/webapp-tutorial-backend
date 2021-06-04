@@ -132,6 +132,10 @@ func (r *TodoRepository) FetchAllByUser(ctx context.Context, u *dto.User, showCo
 		todos = append(todos, t)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", err.Error(), todo.ErrDatabaseError)
+	}
+
 	return todos, nil
 }
 

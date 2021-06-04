@@ -2,12 +2,17 @@ package router
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/org39/webapp-tutorial-backend/pkg/log"
 
 	"github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
+)
+
+const (
+	toMilli = 1e6
 )
 
 func loggerMiddleware() echo.MiddlewareFunc {
@@ -31,7 +36,7 @@ func loggerMiddleware() echo.MiddlewareFunc {
 			accessLog := traceLogger.WithFields(logrus.Fields{
 				"http_status":        status,
 				"http_host":          req.Host,
-				"http_latency":       float64(duration) / float64(1e6),
+				"http_latency":       float64(duration) / float64(toMilli),
 				"http_latency_human": duration.String(),
 				"http_method":        req.Method,
 				"http_uri":           req.RequestURI,
@@ -40,11 +45,11 @@ func loggerMiddleware() echo.MiddlewareFunc {
 
 			msg := fmt.Sprintf("%s %s", req.Method, req.RequestURI)
 			switch {
-			case status >= 500:
+			case status >= http.StatusInternalServerError:
 				accessLog.Error(msg)
-			case status >= 400:
+			case status >= http.StatusBadRequest:
 				accessLog.Warn(msg)
-			case status >= 300:
+			case status >= http.StatusMultipleChoices:
 				accessLog.Debug(msg)
 			default:
 				accessLog.Debug(msg)

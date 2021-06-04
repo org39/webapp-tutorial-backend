@@ -18,6 +18,11 @@ import (
 	"github.com/org39/webapp-tutorial-backend/pkg/log"
 )
 
+const (
+	osSignalChannelLength   = 5
+	gracefulShutdownTimeout = 20 * time.Second
+)
+
 func main() {
 	// build application
 	application, err := app.New(newMysqlConn)
@@ -37,7 +42,7 @@ func main() {
 	)
 
 	// server start and wait signal or error
-	quit := make(chan os.Signal, 5)
+	quit := make(chan os.Signal, osSignalChannelLength)
 	signal.Notify(quit, os.Interrupt)
 	serverErr := make(chan error)
 	go func() {
@@ -48,7 +53,7 @@ func main() {
 	select {
 	case <-quit:
 		log.Info("receive signal")
-		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), gracefulShutdownTimeout)
 		defer cancel()
 
 		if err := server.Shutdown(ctx); err != nil {

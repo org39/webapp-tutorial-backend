@@ -80,7 +80,7 @@ func extractBearerToken(v string) string {
 	parts := strings.Split(v, " ")
 
 	switch {
-	case len(parts) != 2:
+	case parts[0] == v:
 		return invalidToken
 	case parts[0] != bearer:
 		return invalidToken
