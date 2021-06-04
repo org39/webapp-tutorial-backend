@@ -51,4 +51,4 @@ jobs:
       if: env.FOUND_DIRENV_FILE == 'FOUND'
 
     - name: Test
-      run: make test-medium
+      run: make test/medium
